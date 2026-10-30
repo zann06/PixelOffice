@@ -64,21 +64,9 @@ Scene juga bisa dinavigasi: papan Project Board membuka halaman Program Kerja, l
 
 Pin exact versions in `package.json` and lockfiles during implementation. Avoid adding a 3D engine; this is a 2D pixel-art workspace.
 
-## Documentation map
+Dokumentasi produk & teknis lengkap (PRD, arsitektur, data model, security, implementation notes) ada di folder [`docs/`](docs/).
 
-- [Product requirements](docs/PRD.md)
-- [Visual reference and art direction](docs/REFERENCE.md)
-- [Design system](docs/DESIGN_SYSTEM.md)
-- [User flows](docs/USER_FLOWS.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Data model](docs/DATA_MODEL.md)
-- [Security](docs/SECURITY.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Implementation notes](docs/IMPLEMENTATION_NOTES.md)
-- [Enhancement summary](ENHANCEMENT_SUMMARY.md)
-- [Contributing](CONTRIBUTING.md)
-
-## Local setup
+## Rencana pengembangan berikutnya
 
 1. Install Node.js LTS (tested on Node 25).
 2. Install dependencies with npm.
@@ -99,7 +87,7 @@ Pick a demo profile on the sign-in screen (e.g. Ratna — owner, Fajar — lead,
 
 ## Project status
 
-This repository contains a **working demo implementation** of the specification, verified by **71 automated tests (Vitest + React Testing Library, 15 files)** and **4 Playwright end-to-end tests**. See [docs/IMPLEMENTATION_NOTES.md](docs/IMPLEMENTATION_NOTES.md) and [ENHANCEMENT_SUMMARY.md](ENHANCEMENT_SUMMARY.md) for the precise boundary between what is real and what is not.
+This repository contains a **working demo implementation** of the specification, verified by **71 automated tests (Vitest + React Testing Library, 15 files)** and **4 Playwright end-to-end tests**. Batas antara yang nyata dan yang belum (backend, presence, dsb.) didokumentasikan terbuka di `docs/IMPLEMENTATION_NOTES.md` dan `ENHANCEMENT_SUMMARY.md`.
 
 Implemented and tested:
 - Responsive app shell (Indonesian UI) with dashboard, work programs, tasks, meetings, members, and settings.
@@ -115,4 +103,4 @@ Not implemented yet (honestly out of scope for this pass):
 
 ## License
 
-MIT is a reasonable default for the application code. Before release, add a `LICENSE` file and separately verify the licenses of every font, sprite, sound, and third-party asset. See [REFERENCE.md](docs/REFERENCE.md).
+MIT is a reasonable default for the application code. Before release, add a `LICENSE` file and separately verify the licenses of every font, sprite, sound, and third-party asset (daftar lengkap: `docs/REFERENCE.md`).
