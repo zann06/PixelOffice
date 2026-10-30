@@ -36,10 +36,17 @@ export default tseslint.config(
     },
   },
   {
-    // Tests may assert loosely about presence; keep type-aware rules but relax style-only ones.
+    // Tests may assert loosely about presence; keep type-aware rules but relax
+    // style-only ones and allow pragmatic `any` in environment stubs.
     files: ['tests/**/*.{ts,tsx}'],
     rules: {
       '@typescript-eslint/no-unnecessary-type-conversion': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/unbound-method': 'off',
     },
   },
   {

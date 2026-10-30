@@ -1,53 +1,58 @@
 import { describe, expect, it } from 'vitest'
 import {
-  CHAR_BODY_IDLE,
-  CHAR_BODY_WALK_A,
-  CHAR_BODY_WALK_B,
-  CHAR_BODY_WORK,
-  CHAR_HEADS,
   CHAR_H,
-  CHAR_HEAD_H,
   CHAR_W,
+  HAIR_STYLES,
   characterPalette,
+  characterSprite,
   shadeHex,
+  type CharacterPose,
+  type CharacterRole,
 } from '../src/features/pixel-office/sprites'
 
 /**
- * Sprite grid integrity: the renderer composes a head matrix with a body
- * matrix, so every row must be exactly CHAR_W wide and the two parts must add
- * up to CHAR_H. A typo here would silently clip characters on the canvas.
+ * Sprite integrity: `characterSprite` composes head + body + role overlay
+ * procedurally. Every combination must produce a full-height, full-width grid
+ * whose every non-transparent pixel has a palette entry — otherwise the
+ * renderer would silently clip characters or paint undefined colors.
  */
 
-const BODIES = {
-  idle: CHAR_BODY_IDLE,
-  work: CHAR_BODY_WORK,
-  walkA: CHAR_BODY_WALK_A,
-  walkB: CHAR_BODY_WALK_B,
-}
+const POSES: CharacterPose[] = ['idle', 'work', 'walkA', 'walkB']
+const ROLES: CharacterRole[] = ['member', 'owner', 'admin', 'viewer']
 
-function assertMatrix(rows: string[], expectedRows: number, label: string) {
-  expect(rows.length, `${label} row count`).toBe(expectedRows)
-  rows.forEach((row, index) => {
-    expect(row.length, `${label} row ${index} width`).toBe(CHAR_W)
-    expect(row, `${label} row ${index} uses known keys`).toMatch(/^[.ohHseStTwWpPbBm]+$/)
-  })
-}
-
-describe('character sprites', () => {
-  it('head variants all match the sprite grid', () => {
-    CHAR_HEADS.forEach((head, index) => assertMatrix(head, CHAR_HEAD_H, `head ${index}`))
+describe('character sprites (procedural composition)', () => {
+  it('composes full-height, full-width grids for every hair style, pose, and role', () => {
+    for (let head = 0; head < HAIR_STYLES; head++) {
+      for (const pose of POSES) {
+        for (const role of ROLES) {
+          const rows = characterSprite(head, pose, role)
+          expect(rows.length, `head ${head} pose ${pose} role ${role} row count`).toBe(CHAR_H)
+          rows.forEach((row, index) => {
+            expect(row.length, `head ${head} pose ${pose} row ${index} width`).toBe(CHAR_W)
+          })
+        }
+      }
+    }
   })
 
-  it('every body pose matches the sprite grid and total height', () => {
-    expect(CHAR_HEAD_H + CHAR_BODY_IDLE.length).toBe(CHAR_H)
-    for (const [label, body] of Object.entries(BODIES)) assertMatrix(body, CHAR_H - CHAR_HEAD_H, label)
-  })
-
-  it('palette covers every letter used by the sprites', () => {
-    const palette = characterPalette({ hair: '#5b3a24', skin: '#e6b27d', shirt: '#4f8ff7', pants: '#39415a', shoe: '#222b36', eye: '#1a1d24' })
+  it('palette covers every letter used by any sprite variant', () => {
+    const palette = characterPalette({
+      hair: '#5b3a24',
+      skin: '#e6b27d',
+      shirt: '#4f8ff7',
+      pants: '#39415a',
+      shoe: '#222b36',
+      eye: '#1a1d24',
+    })
     const letters = new Set<string>()
-    for (const rows of [...CHAR_HEADS, ...Object.values(BODIES)]) {
-      for (const row of rows) for (const char of row) if (char !== '.') letters.add(char)
+    for (let head = 0; head < HAIR_STYLES; head++) {
+      for (const pose of POSES) {
+        for (const role of ROLES) {
+          for (const row of characterSprite(head, pose, role)) {
+            for (const char of row) if (char !== '.') letters.add(char)
+          }
+        }
+      }
     }
     for (const letter of letters) {
       expect(palette[letter], `palette entry for "${letter}"`).toMatch(/^#[0-9a-f]{6}$/)

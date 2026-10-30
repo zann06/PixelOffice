@@ -12,7 +12,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc -b --noEmit",
     "lint": "eslint .",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "assets": "node scripts/capture-demo.mjs"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -30,11 +31,14 @@
     "eslint": "^9.38.0",
     "eslint-plugin-react-hooks": "^6.1.0",
     "eslint-plugin-react-refresh": "^0.4.23",
+    "gifenc": "^1.0.3",
     "jsdom": "^27.0.0",
+    "pngjs": "^7.0.0",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.0",
     "vite": "^7.1.9",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "vitest-canvas-mock": "^1.2.0"
   }
 }

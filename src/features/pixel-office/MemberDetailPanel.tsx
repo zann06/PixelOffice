@@ -1,4 +1,5 @@
 import type { Task, TaskStatus, WorkspaceSnapshot } from '../../types/data'
+import { buildSceneViewModel } from './sceneViewModel'
 import { PixelSelect } from '../../components/ui/PixelSelect'
 import { editableTaskFields } from '../../lib/permissions'
 import { formatDueLabel, formatDate } from '../../lib/format'
@@ -28,6 +29,7 @@ export function MemberDetailPanel({ open, memberUserId, sessionUserId, snapshot,
   if (!membership) return null
   const profile = snapshot.profiles[memberUserId]
   const ledDepartment = snapshot.departments.find((d) => d.leadUserId === memberUserId) ?? null
+  const seatInfo = buildSceneViewModel(snapshot, new Date()).members.find((m) => m.userId === memberUserId) ?? null
   const tasks = snapshot.tasks
     .filter((t) => t.assigneeUserId === memberUserId)
     .sort((a, b) => (a.dueAt ?? '9999').localeCompare(b.dueAt ?? '9999'))
@@ -40,6 +42,12 @@ export function MemberDetailPanel({ open, memberUserId, sessionUserId, snapshot,
           <p className="text-xs text-text-muted">
             {ledDepartment ? `Ketua divisi ${ledDepartment.name}` : 'Anggota'}
           </p>
+          {seatInfo && (
+            <p className="mt-1 text-xs text-text-muted">
+              Duduk di: <span className="font-medium text-text-main">{seatInfo.seatLabel}</span>
+              {seatInfo.seatPinned ? ' (dikunci manual)' : ' (otomatis)'}
+            </p>
+          )}
         </div>
 
         <section aria-label="Tugas anggota ini">

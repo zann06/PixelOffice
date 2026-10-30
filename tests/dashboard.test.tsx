@@ -67,7 +67,8 @@ describe('DashboardPage — metrics and pixel office from saved data', () => {
     expect(within(dialog).getByText('Setup domain dan hosting')).toBeInTheDocument()
 
     const statusSelect = within(dialog).getByRole('combobox', { name: /ubah status tugas implementasi halaman utama/i })
-    await user.selectOptions(statusSelect, 'done')
+    await user.click(statusSelect)
+    await user.click(await within(dialog).findByRole('option', { name: 'Selesai' }))
     await waitFor(() => {
       expect(screen.getAllByText('Status tugas tersimpan.').length).toBeGreaterThan(0)
     })

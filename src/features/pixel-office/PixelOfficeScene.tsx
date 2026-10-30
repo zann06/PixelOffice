@@ -15,10 +15,10 @@ import {
   hashIndex,
   shadeHex,
   type CharacterPose,
-  type CharacterRole,
 } from './sprites'
 import { drawPixelText, drawPlaque, measurePixelText } from './pixelFont'
 import {
+  ARSIP_SEATS,
   AULA_SEATS,
   KEUANGAN_SEATS,
   KETUA_SEATS,
@@ -397,8 +397,8 @@ export function renderStaticLayer(boardStickies: string[], pins: { blocked: numb
   drawMug(ctx, 22 * TILE + 2, 4 * TILE + 2, '#3f9c50')
   drawPlant(ctx, 20, 5)
 
-  // Mushola — sage carpet, three sajadah facing the kiblat sign, shoe rack, cupboard
-  drawMushola(ctx)
+  // Ruang Arsip — archive cabinets, document desks, file boxes, printer
+  drawArsip(ctx)
 
   // Workspace desks (under each seat) + aisle details
   for (const seat of WORKSPACE_SEATS) drawDesk(ctx, seat.x, seat.y + 1)
@@ -509,7 +509,7 @@ export function renderStaticLayer(boardStickies: string[], pins: { blocked: numb
 
 
 // ---------------------------------------------------------------------------
-// Mushola (prayer room) art + live clock + stage glow + birds
+// Ruang Arsip (archive & documentation room) art + live clock + stage glow + birds
 // ---------------------------------------------------------------------------
 
 function box(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, color: string): void {
@@ -517,47 +517,39 @@ function box(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: 
   ctx.fillRect(x, y, w, h)
 }
 
-function drawSajadah(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
-  box(ctx, x, y, 12, 22, PAL.outline)
-  box(ctx, x + 1, y + 1, 10, 20, color)
-  box(ctx, x + 3, y + 4, 6, 14, shadeHex(color, 0.28))
-  // mihrab arch + gold border lines
-  box(ctx, x + 5, y + 5, 2, 1, PAL.outline)
-  box(ctx, x + 4, y + 6, 1, 2, PAL.outline)
-  box(ctx, x + 7, y + 6, 1, 2, PAL.outline)
-  box(ctx, x + 5, y + 9, 2, 2, '#f2c14e')
-  box(ctx, x + 2, y + 2, 8, 1, '#f2c14e')
-  box(ctx, x + 2, y + 19, 8, 1, '#f2c14e')
+/** Outlined file box with a white label — one of a few stacked archive boxes. */
+function drawFileBox(ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void {
+  box(ctx, x, y, 14, 6, PAL.outline)
+  box(ctx, x + 1, y + 1, 12, 4, color)
+  box(ctx, x + 1, y + 1, 12, 1, shadeHex(color, 0.3))
+  box(ctx, x + 4, y + 2, 6, 2, '#ffffff')
 }
 
-function drawMushola(ctx: CanvasRenderingContext2D): void {
-  drawRug(ctx, 26, 2, 4, 4, '#bcd8b3', '#7fa876')
-  // kiblat sign
-  box(ctx, 27 * TILE + 3, 2 * TILE + 1, 14, 11, PAL.outline)
-  box(ctx, 27 * TILE + 4, 2 * TILE + 2, 12, 9, '#2f9e6b')
-  box(ctx, 27 * TILE + 9, 2 * TILE + 4, 2, 6, '#ffffff')
-  box(ctx, 27 * TILE + 8, 2 * TILE + 5, 4, 1, '#ffffff')
-  box(ctx, 27 * TILE + 7, 2 * TILE + 6, 6, 1, '#ffffff')
-  // three prayer rugs
-  ;[['#3f9c78', 0], ['#4f84d8', 1], ['#a8433f', 2]].forEach(([color, i]) => {
-    drawSajadah(ctx, 26 * TILE + 10 + (i as number) * 16, 2 * TILE + 20, color as string)
-  })
-  // shoe rack (bottom-left)
-  box(ctx, 26 * TILE + 5, 5 * TILE + 1, 16, 11, PAL.outline)
-  box(ctx, 26 * TILE + 6, 5 * TILE + 2, 14, 9, '#b9824a')
-  box(ctx, 26 * TILE + 6, 5 * TILE + 6, 14, 1, PAL.outline)
-  ;['#d9505a', '#4f84d8', '#f2c14e'].forEach((c, i) => {
-    box(ctx, 26 * TILE + 8 + i * 4, 5 * TILE + 3, 3, 2, c)
-    box(ctx, 26 * TILE + 8 + i * 4, 5 * TILE + 8, 3, 2, i === 1 ? '#ffffff' : '#26314b')
-  })
-  // cupboard with folded mukena + book (top-right)
-  box(ctx, 29 * TILE, 2 * TILE, 15, 17, PAL.outline)
-  box(ctx, 29 * TILE + 1, 2 * TILE + 1, 13, 15, '#b9824a')
-  box(ctx, 29 * TILE + 3, 2 * TILE + 3, 9, 5, '#ffffff')
-  box(ctx, 29 * TILE + 3, 2 * TILE + 5, 9, 1, '#f2b5c8')
-  box(ctx, 29 * TILE + 3, 2 * TILE + 9, 9, 5, '#2f9e6b')
-  box(ctx, 29 * TILE + 5, 2 * TILE + 11, 5, 1, '#f2c14e')
-  drawPlant(ctx, 29, 5)
+function drawPrinter(ctx: CanvasRenderingContext2D, x: number, y: number): void {
+  box(ctx, x, y, 26, 12, PAL.outline)
+  box(ctx, x + 1, y + 3, 24, 8, '#e9edf3')
+  box(ctx, x + 1, y + 1, 24, 3, '#cfd6e2')
+  box(ctx, x + 5, y - 2, 14, 4, PAL.outline)
+  box(ctx, x + 6, y - 1, 12, 3, '#ffffff')
+  box(ctx, x + 4, y + 7, 14, 2, '#8d95a6')
+  box(ctx, x + 20, y + 5, 2, 2, '#3ccf91')
+}
+
+function drawArsip(ctx: CanvasRenderingContext2D): void {
+  drawRug(ctx, 26, 2, 4, 4, '#d9d3c0', '#b8b09a')
+  // archive wall: two filing cabinets + a document shelf
+  drawCabinet(ctx, 26, 2)
+  drawCabinet(ctx, 27, 2)
+  drawBookshelf(ctx, 28, 2, 2)
+  // two document desks with chairs
+  for (const seat of ARSIP_SEATS) drawDesk(ctx, seat.x, seat.y + 1)
+  for (const seat of ARSIP_SEATS) drawChairBack(ctx, seat.x, seat.y)
+  // floor: stacked archive boxes, plant, shared printer
+  drawFileBox(ctx, 26 * TILE + 1, 5 * TILE + 9, '#c9a66b')
+  drawFileBox(ctx, 26 * TILE + 1, 5 * TILE + 3, '#d98f6a')
+  drawFileBox(ctx, 26 * TILE + 3, 5 * TILE - 3, '#7fa6d9')
+  drawPlant(ctx, 27, 5)
+  drawPrinter(ctx, 28 * TILE + 3, 5 * TILE + 3)
 }
 
 /** Wall clock hands follow the real clock (face is redrawn every frame). */
@@ -863,6 +855,30 @@ interface WalkState {
   startAt?: number
 }
 
+/**
+ * Members already seen in the scene, per workspace (module scope, so it also
+ * survives leaving the dashboard and coming back). A member that is NOT in this
+ * set when the scene draws is new: they walk in through the entrance door and
+ * go to their seat instead of popping into existence.
+ */
+const knownMembers = new Map<string, Set<string>>()
+const DOOR_TILE = { x: 15, y: 16 }
+
+function doorSpawn(member: SceneMemberVM, startAt: number): WalkState {
+  const anchor = memberPixelAnchor(member)
+  const to = { x: Math.round((anchor.px + CHAR_W / 2) / TILE), y: Math.floor((anchor.py + CHAR_H - 1) / TILE) }
+  const tiles = findPath(WALK_GRID, DOOR_TILE, to)
+  const path = (tiles ?? []).map((t) => ({ x: t.x * TILE + (TILE - CHAR_W) / 2, y: t.y * TILE - (CHAR_H - TILE) }))
+  path.push({ x: anchor.px, y: anchor.py })
+  return {
+    x: DOOR_TILE.x * TILE,
+    y: DOOR_TILE.y * TILE - (CHAR_H - TILE),
+    path,
+    target: `${anchor.px},${anchor.py}`,
+    startAt,
+  }
+}
+
 export function PixelOfficeScene({ vm, selectedUserId, onSelectMember, motionEnabled, phase, simHour, present, onNavigate }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
@@ -906,6 +922,9 @@ export function PixelOfficeScene({ vm, selectedUserId, onSelectMember, motionEna
   // Smooth walking: persisted per-character pixel positions easing toward
   // their data-derived seat along BFS paths through doorways.
   const posRef = useRef(new Map<string, WalkState>())
+  /** userId → timestamp until which the "BARU" tag floats over a newcomer. */
+  const welcomeRef = useRef(new Map<string, number>())
+  const lastVmRef = useRef<SceneViewModel | null>(null)
 
   // Presence honesty: when the working day starts, characters arrive through
   // the entrance (staggered walk-in); when it ends, the office empties.
@@ -919,18 +938,7 @@ export function PixelOfficeScene({ vm, selectedUserId, onSelectMember, motionEna
     }
     if (!becamePresent) return
     stateRef.current.vm.members.forEach((member, index) => {
-      const anchor = memberPixelAnchor(member)
-      const to = { x: Math.round((anchor.px + CHAR_W / 2) / TILE), y: Math.floor((anchor.py + CHAR_H - 1) / TILE) }
-      const tiles = findPath(WALK_GRID, { x: 15, y: 16 }, to)
-      const waypoints = (tiles ?? []).map((t) => ({ x: t.x * TILE + (TILE - CHAR_W) / 2, y: t.y * TILE - (CHAR_H - TILE) }))
-      waypoints.push({ x: anchor.px, y: anchor.py })
-      posRef.current.set(member.userId, {
-        x: 15 * TILE,
-        y: 16 * TILE - (CHAR_H - TILE),
-        path: waypoints,
-        target: `${anchor.px},${anchor.py}`,
-        startAt: (performance.now() ?? 0) + index * 380,
-      })
+      posRef.current.set(member.userId, doorSpawn(member, (performance.now() ?? 0) + index * 380))
     })
   }, [present])
 
@@ -994,7 +1002,15 @@ export function PixelOfficeScene({ vm, selectedUserId, onSelectMember, motionEna
         const targetKey = `${anchor.px},${anchor.py}`
         let pos = posRef.current.get(member.userId)
         if (!pos) {
-          pos = { x: anchor.px, y: anchor.py, path: [], target: targetKey }
+          const known = knownMembers.get(currentVm.workspaceId)
+          const isNewcomer = motion && known !== undefined && !known.has(member.userId)
+          if (isNewcomer) {
+            // walk in through the entrance door, then to the assigned seat
+            pos = doorSpawn(member, timestamp + 250)
+            welcomeRef.current.set(member.userId, timestamp + 9000)
+          } else {
+            pos = { x: anchor.px, y: anchor.py, path: [], target: targetKey }
+          }
           posRef.current.set(member.userId, pos)
         } else if (pos.target !== targetKey) {
           // seat changed (meeting started/ended, data updated): walk there via doorways
@@ -1117,7 +1133,7 @@ export function PixelOfficeScene({ vm, selectedUserId, onSelectMember, motionEna
           member.headIndex,
           pose,
           characterPalette(member.colors, blink),
-          member.role as CharacterRole,
+          member.role,
           // seated behind a desk: hide the legs under the desktop
           !walking && member.seat.wide ? 20 : CHAR_H,
         )
@@ -1182,6 +1198,20 @@ export function PixelOfficeScene({ vm, selectedUserId, onSelectMember, motionEna
       for (const { member, px: rawPx, py: rawPy, walking } of entries) {
         if (member.activity === 'working' && !walking && motion) {
           drawTypingDots(ctx, Math.round(rawPx) + 8, Math.round(rawPy) - 11, Math.floor(timestamp / 260) % 3)
+        }
+        const welcomeUntil = welcomeRef.current.get(member.userId)
+        if (welcomeUntil !== undefined) {
+          if (timestamp > welcomeUntil) {
+            welcomeRef.current.delete(member.userId)
+          } else {
+            const hop = motion ? Math.floor(timestamp / 300) % 2 : 0
+            drawPlaque(ctx, 'BARU', Math.round(rawPx) + 8, Math.round(rawPy) - 19 - hop, {
+              bg: '#1d9e74',
+              border: PAL.outline,
+              fg: '#ffffff',
+              shadow: 'rgba(32,36,47,0.35)',
+            })
+          }
         }
         if (member.userId === selected) {
           const bounce = motion ? Math.floor(timestamp / 220) % 2 : 0
@@ -1281,6 +1311,11 @@ export function PixelOfficeScene({ vm, selectedUserId, onSelectMember, motionEna
           ctx.fillStyle = '#3ccf91'
           ctx.fillRect(x, y + 11, Math.round((w * currentVm.stageProgress) / 100), 2)
         }
+      }
+
+      if (lastVmRef.current !== currentVm) {
+        knownMembers.set(currentVm.workspaceId, new Set(currentVm.members.map((m) => m.userId)))
+        lastVmRef.current = currentVm
       }
 
       if (motion && visible) {

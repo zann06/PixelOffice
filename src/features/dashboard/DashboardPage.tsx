@@ -627,6 +627,8 @@ const ACTIVITY_VERBS: Record<string, string> = {
   'meeting.created': 'menjadwalkan rapat',
   'decision.created': 'mencatat keputusan rapat',
   'decision.task_created': 'membuat tugas tindak lanjut',
+  'member.added': 'menambahkan anggota',
+  'member.updated': 'mengatur anggota',
 }
 
 /** Latest team activity, straight from the saved activity log. */
@@ -644,7 +646,7 @@ function ActivityFeed({ snapshot, now }: { snapshot: WorkspaceSnapshot; now: Dat
         <ul className="flex flex-col gap-2">
           {events.map((event) => {
             const actor = event.actorUserId ? snapshot.profiles[event.actorUserId]?.displayName : null
-            const title = event.metadata.taskTitle ?? event.metadata.programTitle ?? event.metadata.meetingTitle ?? ''
+            const title = event.metadata.taskTitle ?? event.metadata.programTitle ?? event.metadata.meetingTitle ?? event.metadata.memberName ?? ''
             const verb = ACTIVITY_VERBS[event.action] ?? event.action
             return (
               <li key={event.id} className="flex flex-wrap items-baseline gap-x-2 text-sm">

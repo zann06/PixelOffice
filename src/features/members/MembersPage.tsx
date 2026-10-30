@@ -8,13 +8,21 @@ import { formatDate } from '../../lib/format'
 import { MemberDetailPanel } from '../pixel-office/MemberDetailPanel'
 import type { Task, TaskStatus } from '../../types/data'
 import { useToast } from '../../components/ui/Toast'
+import { Button } from '../../components/ui/Button'
+import { MemberFormDialog } from './MemberFormDialog'
+import { buildSceneViewModel } from '../pixel-office/sceneViewModel'
+import { atLeast } from '../../lib/permissions'
 
 export function MembersPage() {
   const { snapshot, session, client, refresh } = useApp()
   const { showToast } = useToast()
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [form, setForm] = useState<{ editUserId: string | null } | null>(null)
   if (!snapshot || !session?.userId) return null
   const now = new Date()
+  const myRole = snapshot.memberships.find((m) => m.userId === session.userId)?.role
+  const canManage = myRole ? atLeast(myRole, 'admin') : false
+  const seatByUser = new Map(buildSceneViewModel(snapshot, now).members.map((m) => [m.userId, m]))
 
   async function handleStatusChange(task: Task, status: TaskStatus) {
     try {
@@ -28,11 +36,18 @@ export function MembersPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
-        <h1 className="text-xl font-semibold">Anggota & Departemen</h1>
-        <p className="text-sm text-text-muted">
-          Struktur {snapshot.workspace.name}. Posisi karakter di kantor pixel mengikuti divisi pada halaman ini.
-        </p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold">Anggota & Departemen</h1>
+          <p className="text-sm text-text-muted">
+            Struktur {snapshot.workspace.name}. Karakter di kantor pixel duduk sesuai divisi dan kursi yang diatur di halaman ini.
+          </p>
+        </div>
+        {canManage && (
+          <Button variant="primary" onClick={() => setForm({ editUserId: null })}>
+            + Tambah anggota
+          </Button>
+        )}
       </header>
 
       <section aria-label="Departemen">
@@ -76,15 +91,17 @@ export function MembersPage() {
       <section aria-label="Daftar anggota">
         <h2 className="mb-2 text-base font-semibold">Anggota ({snapshot.memberships.length})</h2>
         <div className="overflow-x-auto rounded-[12px] border border-border-main">
-          <table className="w-full min-w-[560px] text-sm">
+          <table className="w-full min-w-[680px] text-sm">
             <caption className="sr-only">Daftar anggota workspace beserta peran dan beban tugas</caption>
             <thead>
               <tr className="border-b border-border-main bg-surface-raised text-left text-xs uppercase tracking-wide text-text-muted">
                 <th scope="col" className="px-4 py-2 font-medium">Nama</th>
                 <th scope="col" className="px-4 py-2 font-medium">Peran</th>
+                <th scope="col" className="px-4 py-2 font-medium">Divisi · Kursi</th>
                 <th scope="col" className="px-4 py-2 font-medium">Bergabung</th>
                 <th scope="col" className="px-4 py-2 font-medium">Tugas aktif</th>
                 <th scope="col" className="px-4 py-2 font-medium">Terlambat</th>
+                {canManage && <th scope="col" className="px-4 py-2 font-medium"><span className="sr-only">Atur</span></th>}
               </tr>
             </thead>
             <tbody>
@@ -108,11 +125,25 @@ export function MembersPage() {
                       </button>
                     </td>
                     <td className="px-4 py-2"><RoleBadge role={membership.role} /></td>
+                    <td className="px-4 py-2 text-xs">
+                      <span className="block font-medium">{seatByUser.get(membership.userId)?.departmentName ?? 'Tanpa divisi'}</span>
+                      <span className="text-text-muted">
+                        {seatByUser.get(membership.userId)?.seatLabel}
+                        {seatByUser.get(membership.userId)?.seatPinned ? ' 📌' : ''}
+                      </span>
+                    </td>
                     <td className="px-4 py-2 text-xs text-text-muted tnum">{formatDate(membership.joinedAt)}</td>
                     <td className="px-4 py-2 tnum">{active.length}</td>
                     <td className={`px-4 py-2 tnum ${overdue.length > 0 ? 'font-medium text-danger' : 'text-text-muted'}`}>
                       {overdue.length > 0 ? `${overdue.length} — perlu perhatian` : '0'}
                     </td>
+                    {canManage && (
+                      <td className="px-4 py-2 text-right">
+                        <Button onClick={() => setForm({ editUserId: membership.userId })} aria-label={`Atur ${profile?.displayName ?? 'anggota'}`}>
+                          Atur
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 )
               })}
@@ -120,9 +151,14 @@ export function MembersPage() {
           </table>
         </div>
         <p className="mt-2 text-xs text-text-muted">
-          Pengelolaan anggota (undangan, perubahan peran) belum diimplementasikan pada demo ini — diperlukan kebijakan RLS dan fungsi database yang aman.
+          {canManage
+            ? '📌 = kursi dikunci manual. Tambah atau atur anggota di sini; anggota baru masuk lewat pintu kantor dan duduk di kursinya.'
+            : 'Hanya pemilik atau admin yang dapat menambah anggota dan mengatur kursi.'}
+          {' '}Undangan via email dan kebijakan RLS belum ada di demo ini.
         </p>
       </section>
+
+      {form && <MemberFormDialog snapshot={snapshot} editUserId={form.editUserId} onClose={() => setForm(null)} />}
 
       <MemberDetailPanel
         open={selectedUserId !== null}

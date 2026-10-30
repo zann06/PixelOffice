@@ -14,6 +14,7 @@ All visual assets in this repository are **original and generated in-repo**:
 - Icons (`src/components/ui/icons.tsx`) and the logo (`LogoMark`, `public/favicon.svg`) are hand-authored SVGs created for this project.
 - Typography uses system font stacks only; no third-party fonts are bundled.
 - The reference image `assets/references/pixel-office-reference.png` is used for design direction only and is not rendered by the application.
+- `docs/screenshots/*.png` and `docs/screenshots/demo.gif` are generated captures of this application itself (via `npm run assets`, Playwright + gifenc) — original, no third-party content.
 
 No third-party sprites, fonts, sounds, or screenshots are bundled. If any external asset is introduced later, record it in the table above with its source, creator, license, modifications, and attribution requirements.
 

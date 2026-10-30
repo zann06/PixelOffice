@@ -7,6 +7,9 @@ import type {
   TaskCreateInput,
   TaskUpdateInput,
   MeetingCreateInput,
+  MemberAddInput,
+  MemberUpdateInput,
+  WorkspaceMember,
   WorkspaceSnapshot,
 } from '../../types/data'
 
@@ -38,6 +41,11 @@ export interface DataClient {
   addDecision(meetingId: string, summary: string): Promise<void>
   addTaskComment(taskId: string, body: string): Promise<void>
   createTaskFromDecision(decisionId: string, input: { title: string; assigneeUserId: string | null; dueAt: string | null; departmentId: string | null; programId: string | null; priority: Task['priority'] }): Promise<Task>
+
+  /** Owner/admin only. Adds a member (demo: creates a local profile; production: an invitation). */
+  addMember(input: MemberAddInput): Promise<WorkspaceMember>
+  /** Owner/admin only. Changes role, division and/or fixed seat of an existing member. */
+  updateMember(workspaceId: string, userId: string, patch: MemberUpdateInput): Promise<WorkspaceMember>
 
   /** Demo maintenance: wipes localStorage and reseeds. Confirmed in UI first. */
   resetDemoData(): Promise<void>

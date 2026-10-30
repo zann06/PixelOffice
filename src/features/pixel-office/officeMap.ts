@@ -51,6 +51,11 @@ export const HUMAS_SEATS: Seat[] = [
   { x: 26, y: 7, wide: true, monitor: true }, { x: 26, y: 9, wide: true, monitor: true },
 ]
 
+/** Seats in the Ruang Arsip (archive & documentation) — overflow for Sekretariat and anyone placed there. */
+export const ARSIP_SEATS: Seat[] = [
+  { x: 26, y: 3, wide: true, monitor: true }, { x: 28, y: 3, wide: true, monitor: true },
+]
+
 /** Audience chairs in the Aula & Panggung — Acara division and members without a department. */
 export const AULA_SEATS: Seat[] = [
   { x: 22, y: 13 }, { x: 24, y: 13 },
@@ -79,7 +84,7 @@ export const ROOM_LABELS: RoomLabel[] = [
   { text: 'Ruang Meeting', x: 10.1, y: 1.48 },
   { text: 'Ruang Ketua & Sekretariat', x: 15.5, y: 1.48 },
   { text: 'Pantry', x: 22.25, y: 1.48 },
-  { text: 'Mushola', x: 27.5, y: 1.48 },
+  { text: 'Ruang Arsip', x: 27.5, y: 1.48 },
   { text: 'Workspace', x: 4.3, y: 11.5 },
   { text: 'Keuangan', x: 13.9, y: 11.5 },
   { text: 'Humas & Media', x: 28.2, y: 11.02 },
@@ -124,7 +129,7 @@ export function buildMap(): string[] {
     fillRect(a, 11, b, 11, 'c')
   }
 
-  // Vertical partitions — top band (meeting | ketua & sekretariat | pantry | mushola)
+  // Vertical partitions — top band (meeting | ketua & sekretariat | pantry | arsip)
   fillRect(12, 2, 12, 5, '|')
   fillRect(19, 2, 19, 5, '|')
   fillRect(25, 2, 25, 5, '|')
@@ -145,7 +150,7 @@ export function buildMap(): string[] {
   fillRect(2, 2, 11, 5, 'm') // meeting
   fillRect(13, 2, 18, 5, 'm') // ketua & sekretariat
   fillRect(20, 2, 24, 5, 'm') // pantry
-  fillRect(26, 2, 29, 5, 'c') // mushola (light floor, sage rug on top)
+  fillRect(26, 2, 29, 5, 'c') // ruang arsip (light floor, neutral rug on top)
   fillRect(2, 7, 11, 10, 'g') // workspace
   fillRect(13, 7, 17, 10, 'm') // keuangan
   fillRect(19, 7, 23, 10, 'c') // corridor

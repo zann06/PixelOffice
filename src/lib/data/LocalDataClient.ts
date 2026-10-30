@@ -9,6 +9,9 @@ import type {
   TaskCreateInput,
   TaskUpdateInput,
   MeetingCreateInput,
+  MemberAddInput,
+  MemberUpdateInput,
+  WorkspaceMember,
   Workspace,
   WorkspaceSnapshot,
   ActivityEvent,
@@ -16,7 +19,8 @@ import type {
 import { PermissionError, ValidationError } from '../../types/data'
 import type { DataClient } from './DataClient'
 import { buildSeedDatabase, type SeedDatabase } from './seed'
-import { can, roleForUser } from '../permissions'
+import { atLeast, can, roleForUser } from '../permissions'
+import { isValidSeatId } from '../../features/pixel-office/seatCatalog'
 import {
   LIMITS,
   validateDateRange,
@@ -176,6 +180,100 @@ export class LocalDataClient implements DataClient {
       comments: this.db.comments.filter((c) => c.workspaceId === workspaceId),
       fetchedAt: new Date().toISOString(),
     }
+  }
+
+
+  // ---- members -------------------------------------------------------------
+
+  private requireMemberManager(workspaceId: string): string {
+    const userId = this.requireMembership(workspaceId)
+    const role = roleForUser(this.db.memberships, workspaceId, userId)
+    if (!role || !atLeast(role, 'admin')) {
+      throw new PermissionError('Hanya pemilik atau admin yang dapat mengelola anggota.', 'insufficient_role')
+    }
+    return userId
+  }
+
+  /** A seat may be held by one member at a time within a workspace. */
+  private requireSeatFree(workspaceId: string, seatId: string | null, exceptUserId: string | null): void {
+    if (seatId === null) return
+    if (!isValidSeatId(seatId)) throw new ValidationError('Kursi tidak dikenal.', 'seatId')
+    const taken = this.db.memberships.find((m) => m.workspaceId === workspaceId && m.seatId === seatId && m.userId !== exceptUserId)
+    if (taken) throw new ValidationError('Kursi itu sudah dipakai anggota lain.', 'seatId')
+  }
+
+  async addMember(input: MemberAddInput): Promise<WorkspaceMember> {
+    const actorId = this.requireMemberManager(input.workspaceId)
+    const name = input.displayName.trim().replace(/\s+/g, ' ')
+    if (name.length < 2) throw new ValidationError('Nama minimal 2 karakter.', 'displayName')
+    if (name.length > LIMITS.nameMax) throw new ValidationError(`Nama maksimal ${LIMITS.nameMax} karakter.`, 'displayName')
+    if ((input.role as string) === 'owner') throw new ValidationError('Peran pemilik tidak dapat diberikan.', 'role')
+    this.requireDepartment(input.workspaceId, input.departmentId)
+    this.requireSeatFree(input.workspaceId, input.seatId, null)
+
+    const dup = this.db.memberships
+      .filter((m) => m.workspaceId === input.workspaceId)
+      .some((m) => this.db.profiles.find((p) => p.id === m.userId)?.displayName.toLowerCase() === name.toLowerCase())
+    if (dup) throw new ValidationError('Sudah ada anggota dengan nama itu.', 'displayName')
+
+    const userId = `u-${uuid()}`
+    const now = new Date().toISOString()
+    this.db.profiles.push({ id: userId, displayName: name })
+    const member: WorkspaceMember = {
+      workspaceId: input.workspaceId,
+      userId,
+      role: input.role,
+      joinedAt: now,
+      departmentId: input.departmentId,
+      seatId: input.seatId,
+    }
+    this.db.memberships.push(member)
+    this.claimLeadIfEmpty(input.workspaceId, userId, input.role, input.departmentId)
+    this.logActivity({
+      workspaceId: input.workspaceId,
+      actorUserId: actorId,
+      entityType: 'member',
+      entityId: userId,
+      action: 'member.added',
+      metadata: { memberName: name },
+    })
+    saveDb(this.db)
+    return member
+  }
+
+  async updateMember(workspaceId: string, userId: string, patch: MemberUpdateInput): Promise<WorkspaceMember> {
+    const actorId = this.requireMemberManager(workspaceId)
+    const member = this.db.memberships.find((m) => m.workspaceId === workspaceId && m.userId === userId)
+    if (!member) throw new ValidationError('Anggota tidak ditemukan di workspace ini.', 'userId')
+    if (patch.role !== undefined) {
+      if ((patch.role as string) === 'owner') throw new ValidationError('Peran pemilik tidak dapat diberikan.', 'role')
+      if (member.role === 'owner') throw new ValidationError('Peran pemilik tidak dapat diubah.', 'role')
+      if (userId === actorId && patch.role !== member.role) throw new ValidationError('Anda tidak dapat mengubah peran Anda sendiri.', 'role')
+    }
+    if (patch.departmentId !== undefined) this.requireDepartment(workspaceId, patch.departmentId)
+    if (patch.seatId !== undefined) this.requireSeatFree(workspaceId, patch.seatId, userId)
+
+    if (patch.role !== undefined) member.role = patch.role
+    if (patch.departmentId !== undefined) member.departmentId = patch.departmentId
+    if (patch.seatId !== undefined) member.seatId = patch.seatId
+    this.claimLeadIfEmpty(workspaceId, userId, member.role, member.departmentId ?? null)
+    this.logActivity({
+      workspaceId,
+      actorUserId: actorId,
+      entityType: 'member',
+      entityId: userId,
+      action: 'member.updated',
+      metadata: { memberName: this.db.profiles.find((p) => p.id === userId)?.displayName ?? '' },
+    })
+    saveDb(this.db)
+    return member
+  }
+
+  /** A new "lead" fills an empty lead slot of their division (never replaces an existing lead). */
+  private claimLeadIfEmpty(workspaceId: string, userId: string, role: string, departmentId: string | null): void {
+    if (role !== 'lead' || !departmentId) return
+    const dept = this.db.departments.find((d) => d.id === departmentId && d.workspaceId === workspaceId)
+    if (dept && !dept.leadUserId) dept.leadUserId = userId
   }
 
   // ---- tasks ---------------------------------------------------------------

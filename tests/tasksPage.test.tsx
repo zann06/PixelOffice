@@ -34,7 +34,7 @@ describe('TasksPage (integration through the data layer)', () => {
     expect(await screen.findByText('Implementasi halaman utama')).toBeInTheDocument()
     // Status badges carry text, never color alone.
     expect(await screen.findAllByText('Dikerjakan').then((els) => els.length)).toBeGreaterThan(0)
-    expect(screen.getAllByText('Belum ditugaskan').length).toBeGreaterThanOrEqual(0)
+    expect(screen.getAllByText(/PJ:/).length).toBeGreaterThan(0)
   })
 
   it('updates task status and persists it (Flow D: UI shows confirmed saved state)', async () => {
@@ -44,7 +44,8 @@ describe('TasksPage (integration through the data layer)', () => {
     renderWithProviders(<TasksPage />, client)
 
     const select = await screen.findByRole('combobox', { name: /ubah status implementasi halaman utama/i })
-    await user.selectOptions(select, 'done')
+    await user.click(select)
+    await user.click(await screen.findByRole('option', { name: 'Selesai' }))
 
     await waitFor(() => {
       expect(screen.getAllByText('Status tugas tersimpan.').length).toBeGreaterThan(0)
@@ -65,7 +66,8 @@ describe('TasksPage (integration through the data layer)', () => {
     renderWithProviders(<TasksPage />, client)
 
     const statusSelect = await screen.findByRole('combobox', { name: 'Filter status' })
-    await user.selectOptions(statusSelect, 'overdue')
+    await user.click(statusSelect)
+    await user.click(await screen.findByRole('option', { name: 'Terlambat' }))
 
     expect((await screen.findAllByText(/Terlambat \d+ hari/)).length).toBeGreaterThan(0)
     expect(screen.queryByText('Implementasi halaman program kerja')).not.toBeInTheDocument()

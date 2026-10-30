@@ -34,6 +34,26 @@ export interface WorkspaceMember {
   userId: string
   role: Role
   joinedAt: string
+  /** Explicit division/place the member belongs to (null/undefined = inferred from lead/tasks). */
+  departmentId?: string | null
+  /** Explicit office seat id (e.g. "workspace:3"); null/undefined = automatic seat for the division. */
+  seatId?: string | null
+}
+
+export type AssignableRole = Exclude<Role, 'owner'>
+
+export interface MemberAddInput {
+  workspaceId: string
+  displayName: string
+  role: AssignableRole
+  departmentId: string | null
+  seatId: string | null
+}
+
+export interface MemberUpdateInput {
+  role?: AssignableRole
+  departmentId?: string | null
+  seatId?: string | null
 }
 
 export interface Department {
@@ -122,7 +142,7 @@ export interface Decision {
   createdAt: string
 }
 
-export type ActivityEntityType = 'task' | 'program' | 'meeting' | 'decision'
+export type ActivityEntityType = 'task' | 'program' | 'meeting' | 'decision' | 'member'
 
 export interface ActivityEvent {
   id: string

@@ -129,12 +129,24 @@ export function PixelSelect({
       }
       return
     }
-    if (e.key === 'ArrowDown') (e.preventDefault(), setActive((a) => move(a, 1)))
-    else if (e.key === 'ArrowUp') (e.preventDefault(), setActive((a) => move(a, -1)))
-    else if (e.key === 'Home') (e.preventDefault(), setActive(move(-1, 1)))
-    else if (e.key === 'End') (e.preventDefault(), setActive(move(options.length, -1)))
-    else if (e.key === 'Enter' || e.key === ' ') (e.preventDefault(), pick(active))
-    else if (e.key === 'Escape' || e.key === 'Tab') setOpen(false)
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActive((a) => move(a, 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActive((a) => move(a, -1))
+    } else if (e.key === 'Home') {
+      e.preventDefault()
+      setActive(move(-1, 1))
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      setActive(move(options.length, -1))
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      pick(active)
+    } else if (e.key === 'Escape' || e.key === 'Tab') {
+      setOpen(false)
+    }
     else if (e.key.length === 1) {
       const idx = options.findIndex((o, i) => i > active && !o.disabled && o.text.toLowerCase().startsWith(e.key.toLowerCase()))
       const wrap = idx >= 0 ? idx : options.findIndex((o) => !o.disabled && o.text.toLowerCase().startsWith(e.key.toLowerCase()))

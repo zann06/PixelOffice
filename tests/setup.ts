@@ -4,6 +4,17 @@ import { configure } from '@testing-library/react'
 // Generous async waits: the suite runs several jsdom environments in parallel.
 configure({ asyncUtilTimeout: 4000 })
 
+// jsdom lacks ResizeObserver; the 3× scene renderer measures via it. Stub for tests.
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+if (typeof window !== 'undefined' && !('ResizeObserver' in window)) {
+  // @ts-expect-error test stub
+  window.ResizeObserver = ResizeObserverStub
+}
+
 // jsdom lacks IntersectionObserver; the scene pauses via it. Stub for tests.
 class IntersectionObserverStub {
   observe() {}
