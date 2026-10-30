@@ -4,6 +4,8 @@ import { programProgress, isTaskOverdue } from '../../lib/progress'
 import { RoleBadge } from '../../components/ui/StatusBadge'
 import { Avatar } from '../../components/ui/Form'
 import { EmptyState } from '../../components/ui/States'
+import { AccessibleDialog } from '../../components/ui/AccessibleDialog'
+import { FormField, TextInput } from '../../components/ui/Form'
 import { formatDate } from '../../lib/format'
 import { MemberDetailPanel } from '../pixel-office/MemberDetailPanel'
 import type { Task, TaskStatus } from '../../types/data'
@@ -22,6 +24,29 @@ export function MembersPage() {
   const now = new Date()
   const myRole = snapshot.memberships.find((m) => m.userId === session.userId)?.role
   const canManage = myRole ? atLeast(myRole, 'admin') : false
+  const [deptOpen, setDeptOpen] = useState(false)
+  const [deptName, setDeptName] = useState('')
+  const [deptDesc, setDeptDesc] = useState('')
+  const [deptError, setDeptError] = useState<string | null>(null)
+  const [deptBusy, setDeptBusy] = useState(false)
+
+  const wsId = snapshot.workspace.id
+  async function createDepartment() {
+    setDeptBusy(true)
+    setDeptError(null)
+    try {
+      await client.createDepartment({ workspaceId: wsId, name: deptName, description: deptDesc || null })
+      setDeptOpen(false)
+      setDeptName('')
+      setDeptDesc('')
+      await refresh()
+      showToast('success', 'Departemen dibuat.')
+    } catch (err) {
+      setDeptError(err instanceof Error ? err.message : 'Gagal membuat departemen.')
+    } finally {
+      setDeptBusy(false)
+    }
+  }
   const seatByUser = new Map(buildSceneViewModel(snapshot, now).members.map((m) => [m.userId, m]))
 
   async function handleStatusChange(task: Task, status: TaskStatus) {
@@ -51,7 +76,14 @@ export function MembersPage() {
       </header>
 
       <section aria-label="Departemen">
-        <h2 className="mb-2 text-base font-semibold">Departemen ({snapshot.departments.length})</h2>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <h2 className="text-base font-semibold">Departemen ({snapshot.departments.length})</h2>
+          {canManage && (
+            <Button onClick={() => setDeptOpen(true)}>
+              <span aria-hidden>＋</span> Tambah departemen
+            </Button>
+          )}
+        </div>
         {snapshot.departments.length === 0 ? (
           <EmptyState title="Belum ada departemen" />
         ) : (
@@ -71,6 +103,19 @@ export function MembersPage() {
                     <Avatar name={lead?.displayName ?? '?'} /> Ketua: {lead?.displayName ?? 'belum ada'}
                   </p>
                   <p className="mt-1 text-xs text-text-muted">{members.length} anggota terkait</p>
+                  {(() => {
+                    const deptTasks = snapshot.tasks.filter((t) => t.departmentId === department.id)
+                    const active = deptTasks.filter((t) => t.status !== 'done' && t.status !== 'cancelled').length
+                    const late = deptTasks.filter((t) => isTaskOverdue(t, now)).length
+                    const done = deptTasks.filter((t) => t.status === 'done').length
+                    return (
+                      <p className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-text-muted tnum">
+                        <span>Aktif: {active}</span>
+                        <span className={late > 0 ? 'text-danger' : ''}>Terlambat: {late}</span>
+                        <span>Selesai: {done}</span>
+                      </p>
+                    )
+                  })()}
                   {departmentPrograms.length > 0 && (
                     <ul className="mt-2 flex flex-col gap-1 border-t border-border-main pt-2 text-xs">
                       {departmentPrograms.map((p) => (
@@ -159,6 +204,31 @@ export function MembersPage() {
       </section>
 
       {form && <MemberFormDialog snapshot={snapshot} editUserId={form.editUserId} onClose={() => setForm(null)} />}
+
+      {deptOpen && (
+        <AccessibleDialog
+          open
+          onClose={() => setDeptOpen(false)}
+          title="Departemen baru"
+          footer={
+            <div className="flex justify-end gap-2">
+              <Button onClick={() => setDeptOpen(false)}>Batal</Button>
+              <Button variant="primary" onClick={() => void createDepartment()} disabled={deptBusy || deptName.trim().length < 2}>
+                {deptBusy ? 'Menyimpan…' : 'Simpan'}
+              </Button>
+            </div>
+          }
+        >
+          <form className="flex flex-col gap-3" onSubmit={(e) => e.preventDefault()}>
+            <FormField label="Nama departemen" htmlFor="dept-name" error={deptError}>
+              <TextInput id="dept-name" value={deptName} onChange={(e) => setDeptName(e.target.value)} invalid={Boolean(deptError)} maxLength={80} />
+            </FormField>
+            <FormField label="Deskripsi (opsional)" htmlFor="dept-desc">
+              <TextInput id="dept-desc" value={deptDesc} onChange={(e) => setDeptDesc(e.target.value)} maxLength={120} />
+            </FormField>
+          </form>
+        </AccessibleDialog>
+      )}
 
       <MemberDetailPanel
         open={selectedUserId !== null}

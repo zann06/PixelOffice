@@ -8,25 +8,25 @@
 
 | Dasbor + kantor pixel | Panel anggota dari karakter |
 | --- | --- |
-| ![Dasbor dengan kantor pixel](docs/screenshots/dashboard.png) | ![Panel anggota](docs/screenshots/member-panel.png) |
+| ![Dasbor dengan kantor pixel](assets/screenshots/dashboard.png) | ![Panel anggota](assets/screenshots/member-panel.png) |
 
 | Tugas | Detail tugas + diskusi |
 | --- | --- |
-| ![Daftar tugas](docs/screenshots/tasks.png) | ![Detail tugas](docs/screenshots/task-detail.png) |
+| ![Daftar tugas](assets/screenshots/tasks.png) | ![Detail tugas](assets/screenshots/task-detail.png) |
 
 | Rapat & keputusan | Anggota & departemen |
 | --- | --- |
-| ![Rapat dan keputusan](docs/screenshots/meeting-decision.png) | ![Anggota](docs/screenshots/members.png) |
+| ![Rapat dan keputusan](assets/screenshots/meeting-decision.png) | ![Anggota](assets/screenshots/members.png) |
 
 Siklus waktu mengikuti jam nyata — pagi, siang, sore, dan malam masing-masing punya pencahayaan sendiri (lihat juga pratinjau fase di toolbar dasbor):
 
 | Pagi | Siang | Sore | Malam |
 | --- | --- | --- | --- |
-| ![Pagi](docs/screenshots/scene-pagi.png) | ![Siang](docs/screenshots/dashboard.png) | ![Sore](docs/screenshots/scene-sore.png) | ![Malam](docs/screenshots/scene-malam.png) |
+| ![Pagi](assets/screenshots/scene-pagi.png) | ![Siang](assets/screenshots/dashboard.png) | ![Sore](assets/screenshots/scene-sore.png) | ![Malam](assets/screenshots/scene-malam.png) |
 
 ## Demo alur kerja
 
-![Demo alur kerja PixelOffice](docs/screenshots/demo.gif)
+![Demo alur kerja PixelOffice](assets/screenshots/demo.gif)
 
 Alur yang terlihat pada GIF di atas (semua perubahan tersimpan dan langsung tercermin di dasbor maupun scene):
 
@@ -64,8 +64,6 @@ Scene juga bisa dinavigasi: papan Project Board membuka halaman Program Kerja, l
 
 Pin exact versions in `package.json` and lockfiles during implementation. Avoid adding a 3D engine; this is a 2D pixel-art workspace.
 
-Dokumentasi produk & teknis lengkap (PRD, arsitektur, data model, security, implementation notes) ada di folder [`docs/`](docs/).
-
 ## Rencana pengembangan berikutnya
 
 1. Install Node.js LTS (tested on Node 25).
@@ -75,7 +73,7 @@ Dokumentasi produk & teknis lengkap (PRD, arsitektur, data model, security, impl
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm test           # Vitest + RTL (71 tests, 15 files)
+npm test           # Vitest + RTL (78 tests, 16 files)
 npm run lint       # ESLint
 npm run typecheck  # strict TypeScript
 npm run build      # production build
@@ -87,7 +85,7 @@ Pick a demo profile on the sign-in screen (e.g. Ratna — owner, Fajar — lead,
 
 ## Project status
 
-This repository contains a **working demo implementation** of the specification, verified by **71 automated tests (Vitest + React Testing Library, 15 files)** and **4 Playwright end-to-end tests**. Batas antara yang nyata dan yang belum (backend, presence, dsb.) didokumentasikan terbuka di `docs/IMPLEMENTATION_NOTES.md` dan `ENHANCEMENT_SUMMARY.md`.
+This repository contains a **working demo implementation** of the specification, verified by **78 automated tests (Vitest + React Testing Library, 16 files)** and **4 Playwright end-to-end tests**. Batas antara yang nyata dan yang belum (backend, presence, dsb.) didokumentasikan terbuka di `docs/IMPLEMENTATION_NOTES.md` dan `ENHANCEMENT_SUMMARY.md`.
 
 Implemented and tested:
 - Responsive app shell (Indonesian UI) with dashboard, work programs, tasks, meetings, members, and settings.
@@ -95,6 +93,7 @@ Implemented and tested:
 - Real-clock day cycle (pagi/siang/sore/malam lighting) and office-hours presence: outside Sen–Jum 08.00–18.00 the office is honestly empty with an explanatory note.
 - Work programs with documented progress calculation, tasks with statuses/assignees/due dates/comments, meetings with agenda/notes/decisions, decision → follow-up task conversion, CSV export.
 - Member management (owner/admin): add members, assign division and scene seat, change roles — enforced in the data layer, no self-elevation.
+- Task board (kanban with drag-and-drop), meeting calendar view, workspace creation wizard, department management, in-app notification center, and recurring tasks (weekly/monthly auto-respawn on completion).
 - Corridor display with the real meeting schedule, clickable scene hotspots, activity feed, command palette (Ctrl/⌘K), due-soon reminders, trend chart, CSV/JSON export, keyboard + screen-reader alternatives for the scene, and reduced-motion support.
 
 Not implemented yet (honestly out of scope for this pass):
@@ -103,4 +102,4 @@ Not implemented yet (honestly out of scope for this pass):
 
 ## License
 
-MIT is a reasonable default for the application code. Before release, add a `LICENSE` file and separately verify the licenses of every font, sprite, sound, and third-party asset (daftar lengkap: `docs/REFERENCE.md`).
+MIT is a reasonable default for the application code. Before release, add a `LICENSE` file and separately verify the licenses of every font, sprite, sound, and third-party asset. Semua aset scene dibuat prosedural, dan screenshot/GIF README dibuat sendiri via `npm run assets`.

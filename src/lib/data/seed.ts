@@ -156,7 +156,7 @@ export function buildSeedDatabase(now: Date = new Date()): SeedDatabase {
     id: string, programId: string | null, departmentId: string,
     title: string, status: Task['status'], priority: Task['priority'],
     assigneeUserId: string | null, dueOffsetDays: number | null,
-    extra?: Partial<Pick<Task, 'description' | 'blockedReason' | 'decisionId'>>,
+    extra?: Partial<Pick<Task, 'description' | 'blockedReason' | 'decisionId' | 'recurrence'>>,
   ): Task => ({
     id,
     workspaceId: WORKSPACE_A,
@@ -169,6 +169,7 @@ export function buildSeedDatabase(now: Date = new Date()): SeedDatabase {
     assigneeUserId,
     createdBy: 'u-fajar',
     dueAt: dueOffsetDays == null ? null : at(dueOffsetDays, 17, 0),
+    recurrence: extra?.recurrence ?? null,
     blockedReason: extra?.blockedReason ?? null,
     decisionId: extra?.decisionId ?? null,
     createdAt: iso(t - 12 * DAY),
@@ -207,7 +208,7 @@ export function buildSeedDatabase(now: Date = new Date()): SeedDatabase {
     // Task without a program (general)
     mkTask('t-gl-1', null, 'd-humas', 'Simpan arsip foto ke drive bersama', 'todo', 'low', 'u-maya', null),
     // Overdue demo tasks
-    mkTask('t-gl-2', null, 'd-humas', 'Balas pesan masuk akun media sosial', 'todo', 'normal', 'u-maya', -2),
+    mkTask('t-gl-2', null, 'd-humas', 'Balas pesan masuk akun media sosial', 'todo', 'normal', 'u-maya', -2, { recurrence: 'weekly' }),
     mkTask('t-gl-3', null, 'd-teknologi', 'Perbarui daftar kontak alumni', 'blocked', 'low', 'u-andi', -3, { blockedReason: 'Spreadsheet kontak lama tidak bisa diakses.' }),
     // Keuangan (Bendahara)
     mkTask('t-ku-1', null, 'd-keuangan', 'Rekap kas bulanan Oktober', 'in_progress', 'high', 'u-laras', 3, { description: 'Cocokkan nota panitia dengan buku kas.' }),
@@ -222,7 +223,7 @@ export function buildSeedDatabase(now: Date = new Date()): SeedDatabase {
   tasks.push(
     {
       id: 't-b-1', workspaceId: WORKSPACE_B, programId: 'p-aksi', departmentId: 'd-lapangan',
-      title: 'Koordinasi relawan mingguan', description: null, status: 'in_progress', priority: 'normal',
+      title: 'Koordinasi relawan mingguan', description: null, status: 'in_progress', priority: 'normal', recurrence: 'weekly' as const,
       assigneeUserId: 'u-hana', createdBy: 'u-hana', dueAt: at(2, 17, 0), blockedReason: null, decisionId: null,
       createdAt: iso(t - 5 * DAY), updatedAt: iso(t - 1 * DAY), completedAt: null,
     },

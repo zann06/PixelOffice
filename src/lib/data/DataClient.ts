@@ -1,5 +1,9 @@
 import type {
+  Department,
+  DepartmentCreateInput,
   Meeting,
+  Workspace,
+  WorkspaceCreateInput,
   Program,
   ProgramCreateInput,
   Session,
@@ -40,6 +44,8 @@ export interface DataClient {
   updateMeetingNotes(meetingId: string, notes: string | null, agenda?: string | null): Promise<Meeting>
   addDecision(meetingId: string, summary: string): Promise<void>
   addTaskComment(taskId: string, body: string): Promise<void>
+  createWorkspace(input: WorkspaceCreateInput): Promise<Workspace>
+  createDepartment(input: DepartmentCreateInput): Promise<Department>
   createTaskFromDecision(decisionId: string, input: { title: string; assigneeUserId: string | null; dueAt: string | null; departmentId: string | null; programId: string | null; priority: Task['priority'] }): Promise<Task>
 
   /** Owner/admin only. Adds a member (demo: creates a local profile; production: an invitation). */

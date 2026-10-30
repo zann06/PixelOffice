@@ -32,6 +32,7 @@ function task(overrides: Partial<Task> = {}): Task {
     createdBy: 'owner',
     dueAt: null,
     blockedReason: null,
+    recurrence: null,
     decisionId: null,
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',

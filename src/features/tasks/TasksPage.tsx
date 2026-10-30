@@ -12,7 +12,7 @@ import { Button } from '../../components/ui/Button'
 import { EmptyState, PermissionDenied } from '../../components/ui/States'
 import { FormField, Select, TextArea, TextInput } from '../../components/ui/Form'
 import { IconPlus, IconSearch, IconAlert } from '../../components/ui/icons'
-import type { Task, TaskPriority, TaskStatus } from '../../types/data'
+import type { Task, TaskPriority, Recurrence, TaskStatus } from '../../types/data'
 import { ValidationError } from '../../types/data'
 
 type StatusFilter = 'all' | TaskStatus | 'overdue'
@@ -27,6 +27,7 @@ export function TasksPage() {
   const [query, setQuery] = useState('')
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [view, setView] = useState<'list' | 'board'>('list')
 
   const myUserId = session?.userId ?? null
   const now = useMemo(() => new Date(), [snapshot?.fetchedAt])
@@ -141,13 +142,40 @@ export function TasksPage() {
         </label>
       </div>
 
+      <div className="flex rounded-[8px] border border-border-main p-0.5" role="group" aria-label="Mode tampilan tugas">
+        <button
+          type="button"
+          aria-pressed={view === 'list'}
+          onClick={() => setView('list')}
+          className={`rounded-[6px] px-3 py-1 text-sm ${view === 'list' ? 'bg-surface-raised text-text-main' : 'text-text-muted'}`}
+        >
+          Daftar
+        </button>
+        <button
+          type="button"
+          aria-pressed={view === 'board'}
+          onClick={() => setView('board')}
+          className={`rounded-[6px] px-3 py-1 text-sm ${view === 'board' ? 'bg-surface-raised text-text-main' : 'text-text-muted'}`}
+        >
+          Papan
+        </button>
+      </div>
+
       {filtered.length === 0 ? (
         <EmptyState
           title="Tidak ada tugas yang cocok"
           description="Coba ubah filter atau kata kunci pencarian."
         />
+      ) : view === 'board' ? (
+        <TaskBoard
+          tasks={filtered}
+          selectedTaskId={selectedTaskId}
+          onOpen={setSelectedTaskId}
+          onStatusChange={handleStatusChange}
+          sessionUserId={myUserId}
+        />
       ) : (
-        <ul className="flex flex-col gap-2">
+        <ul key="list" className="fade-up flex flex-col gap-2">
           {filtered.map((task) => (
             <TaskRow
               key={task.id}
@@ -328,6 +356,11 @@ function TaskDetailPanel({ task, onClose }: { task: Task; onClose: () => void })
             </p>
           )}
           {task.description && <p className="whitespace-pre-line text-text-muted">{task.description}</p>}
+          {task.recurrence && (
+            <p className="text-xs text-text-muted">
+              ↻ Tugas berulang {task.recurrence === 'weekly' ? 'mingguan' : 'bulanan'} — salinan baru otomatis dibuat setelah ditandai selesai.
+            </p>
+          )}
           {task.status === 'blocked' && (
             <p className="flex items-start gap-1 rounded-[8px] border border-danger/50 bg-danger/10 px-3 py-2 text-xs text-danger">
               <IconAlert /> {task.blockedReason ?? 'Ditandai terhambat tanpa alasan.'}
@@ -446,6 +479,7 @@ function CreateTaskDialog({ onClose, onCreated }: { onClose: () => void; onCreat
   const [priority, setPriority] = useState<TaskPriority>('normal')
   const [dueAt, setDueAt] = useState('')
   const [description, setDescription] = useState('')
+  const [recurrence, setRecurrence] = useState<Recurrence | ''>('')
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
 
@@ -464,6 +498,7 @@ function CreateTaskDialog({ onClose, onCreated }: { onClose: () => void; onCreat
         priority,
         assigneeUserId: assigneeUserId || null,
         dueAt: dueAt ? new Date(dueAt).toISOString() : null,
+        recurrence: recurrence || null,
       })
       await onCreated()
     } catch (err) {
@@ -539,6 +574,21 @@ function CreateTaskDialog({ onClose, onCreated }: { onClose: () => void; onCreat
         <FormField label="Tenggat" htmlFor="task-due-new" error={errors.dueAt}>
           <TextInput id="task-due-new" type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} />
         </FormField>
+        <FormField
+          label="Pengulangan"
+          htmlFor="task-recurrence-new"
+          hint="Tugas berulang otomatis muncul lagi sebagai tugas baru setelah ditandai selesai."
+        >
+          <Select
+            id="task-recurrence-new"
+            value={recurrence}
+            onChange={(e) => setRecurrence(e.target.value as Recurrence | '')}
+          >
+            <option value="">Tidak berulang</option>
+            <option value="weekly">Mingguan</option>
+            <option value="monthly">Bulanan</option>
+          </Select>
+        </FormField>
         <FormField label="Deskripsi" htmlFor="task-desc-new" error={errors.description}>
           <TextArea id="task-desc-new" value={description} onChange={(e) => setDescription(e.target.value)} maxLength={2000} />
         </FormField>
@@ -612,5 +662,117 @@ function CommentsSection({ task }: { task: Task }) {
         <PermissionDenied message="Pengamat hanya dapat membaca diskusi." />
       )}
     </section>
+  )
+}
+
+const BOARD_COLUMNS: { status: TaskStatus; label: string }[] = TASK_STATUS_OPTIONS.map((o) => ({
+  status: o.value,
+  label: o.label,
+}))
+
+/**
+ * Kanban board: drag a card between columns to change its status (adapter
+ * re-checks permission), or click the card to open the detail panel where the
+ * status is also editable — keyboard users are never blocked by drag-only.
+ */
+function TaskBoard({
+  tasks,
+  selectedTaskId,
+  onOpen,
+  onStatusChange,
+  sessionUserId,
+}: {
+  tasks: Task[]
+  selectedTaskId: string | null
+  onOpen: (taskId: string) => void
+  onStatusChange: (task: Task, status: TaskStatus) => Promise<void>
+  sessionUserId: string
+}) {
+  const { snapshot } = useApp()
+  const [dragOver, setDragOver] = useState<TaskStatus | null>(null)
+  if (!snapshot) return null
+
+  return (
+    <div className="fade-up flex gap-3 overflow-x-auto pb-2" role="list" aria-label="Papan tugas per status">
+      {BOARD_COLUMNS.map((column) => {
+        const columnTasks = tasks.filter((t) => t.status === column.status)
+        return (
+          <section
+            key={column.status}
+            aria-label={`${column.label} (${columnTasks.length})`}
+            className={`min-w-56 flex-1 rounded-[12px] border p-2 transition-colors ${
+              dragOver === column.status ? 'border-info bg-info/5' : 'border-border-main bg-surface'
+            }`}
+            onDragOver={(e) => {
+              e.preventDefault()
+              setDragOver(column.status)
+            }}
+            onDragLeave={() => setDragOver(null)}
+            onDrop={(e) => {
+              e.preventDefault()
+              setDragOver(null)
+              const taskId = e.dataTransfer.getData('text/plain')
+              const task = tasks.find((t) => t.id === taskId)
+              if (task && task.status !== column.status) void onStatusChange(task, column.status)
+            }}
+          >
+            <h3 className="mb-2 flex items-center justify-between px-1 text-xs font-semibold uppercase tracking-wide text-text-muted">
+              {column.label}
+              <span className="rounded-full bg-surface-raised px-1.5 tnum">{columnTasks.length}</span>
+            </h3>
+            <ul className="flex flex-col gap-2" role="list">
+              {columnTasks.map((task) => {
+                const editable = can(sessionUserId, snapshot.memberships, 'task:update', {
+                  workspaceId: task.workspaceId,
+                  departmentId: task.departmentId,
+                  task,
+                  departments: snapshot.departments,
+                }).allowed
+                return (
+                  <li
+                    key={task.id}
+                    role="listitem"
+                    draggable={editable}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData('text/plain', task.id)
+                      e.dataTransfer.effectAllowed = 'move'
+                    }}
+                    className={`rounded-[8px] border border-border-main bg-surface-raised px-3 py-2 ${
+                      editable ? 'cursor-grab active:cursor-grabbing' : ''
+                    } ${selectedTaskId === task.id ? 'border-info' : ''}`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => onOpen(task.id)}
+                      className="block w-full text-left"
+                      aria-label={`Buka detail tugas ${task.title}`}
+                    >
+                      <span className="block truncate text-sm font-medium">{task.title}</span>
+                      <span className="mt-0.5 block truncate text-xs text-text-muted">
+                        {task.assigneeUserId
+                          ? snapshot.profiles[task.assigneeUserId]?.displayName
+                          : 'Belum ditugaskan'}
+                        {task.dueAt ? ` · ${formatDate(task.dueAt)}` : ''}
+                        {task.recurrence ? ' · ↻' : ''}
+                      </span>
+                    </button>
+                    {editable && (
+                      <p className="mt-1 text-[10px] text-text-muted/70" aria-hidden>
+                        Geser ke kolom lain untuk mengubah status
+                      </p>
+                    )}
+                  </li>
+                )
+              })}
+              {columnTasks.length === 0 && (
+                <li className="rounded-[8px] border border-dashed border-border-main px-2 py-4 text-center text-xs text-text-muted">
+                  Kosong
+                </li>
+              )}
+            </ul>
+          </section>
+        )
+      })}
+    </div>
   )
 }

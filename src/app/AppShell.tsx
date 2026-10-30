@@ -5,7 +5,9 @@ import type { ReactNode } from 'react'
 import { Link, useRoute } from './routing'
 import { useRouter } from './router'
 import { CommandPalette } from '../features/search/CommandPalette'
-import { IconSearch } from '../components/ui/icons'
+import { WorkspaceCreateDialog } from '../features/workspaces/WorkspaceCreateDialog'
+import { NotificationBell } from '../components/ui/NotificationBell'
+import { IconPlus, IconSearch } from '../components/ui/icons'
 import type { Route } from './router'
 import { useApp } from './store'
 import { useSettings } from './settings'
@@ -77,6 +79,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { motionEnabled, setMotionEnabled } = useSettings()
   const [menuOpen, setMenuOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [wsOpen, setWsOpen] = useState(false)
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -134,6 +137,16 @@ export function AppShell({ children }: { children: ReactNode }) {
             <IconSearch aria-hidden />
             Cari cepat
             <kbd className="ml-auto rounded-[4px] border border-border-main bg-surface px-1 text-[10px]">Ctrl K</kbd>
+          </button>
+
+          <NotificationBell />
+
+          <button
+            type="button"
+            onClick={() => setWsOpen(true)}
+            className="flex items-center gap-2 rounded-[8px] border border-dashed border-border-main px-3 py-2 text-sm text-text-muted hover:text-text-main"
+          >
+            <IconPlus aria-hidden /> Workspace baru
           </button>
 
           <NavLinks />
@@ -234,6 +247,16 @@ export function AppShell({ children }: { children: ReactNode }) {
           <BottomLink key={item.route} item={item} />
         ))}
       </nav>
+
+      {wsOpen && (
+        <WorkspaceCreateDialog
+          onClose={() => setWsOpen(false)}
+          onCreated={async (id) => {
+            setWsOpen(false)
+            await switchWorkspace(id)
+          }}
+        />
+      )}
 
       {snapshot && (
         <CommandPalette

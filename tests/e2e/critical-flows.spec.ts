@@ -22,10 +22,11 @@ test('dashboard shows the pixel office and an accessible roster', async ({ page 
 test('task status change persists and appears after reload', async ({ page }) => {
   await page.getByRole('link', { name: 'Tugas' }).first().click()
   const select = page.getByRole('combobox', { name: /ubah status riset referensi/i })
-  await select.selectOption('in_progress')
+  await select.click()
+  await page.getByRole('option', { name: 'Dikerjakan', exact: true }).click()
   await expect(page.getByText('Status tugas tersimpan.')).toBeVisible()
   await page.reload()
-  await expect(page.getByRole('combobox', { name: /ubah status riset referensi/i })).toHaveValue('in_progress')
+  await expect(page.getByRole('combobox', { name: /ubah status riset referensi/i })).toContainText('Dikerjakan')
 })
 
 test('meeting decision can be converted into a follow-up task', async ({ page }) => {

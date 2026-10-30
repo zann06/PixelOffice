@@ -13,10 +13,14 @@ import { IconLink, IconPlus } from '../../components/ui/icons'
 import type { Meeting, TaskPriority } from '../../types/data'
 import { ValidationError } from '../../types/data'
 
+import { MeetingCalendar } from './MeetingCalendar'
+
 export function MeetingsPage() {
   const { snapshot, session } = useApp()
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [view, setView] = useState<'list' | 'calendar'>('list')
+  const [monthCursor, setMonthCursor] = useState(() => new Date())
 
   if (!snapshot || !session?.userId) return null
   const now = new Date()
@@ -40,17 +44,44 @@ export function MeetingsPage() {
           <h1 className="text-xl font-semibold">Rapat</h1>
           <p className="text-sm text-text-muted">Agenda, catatan, dan keputusan yang bisa ditindaklanjuti menjadi tugas.</p>
         </div>
-        {canCreate ? (
-          <Button variant="primary" onClick={() => setCreateOpen(true)}>
-            <IconPlus /> Rapat baru
-          </Button>
-        ) : (
-          <PermissionDenied message="Pembuatan rapat hanya untuk pemilik, admin, atau ketua divisi." />
-        )}
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-[8px] border border-border-main p-0.5" role="group" aria-label="Mode tampilan rapat">
+            <button
+              type="button"
+              aria-pressed={view === 'list'}
+              onClick={() => setView('list')}
+              className={`rounded-[6px] px-3 py-1 text-sm ${view === 'list' ? 'bg-surface-raised text-text-main' : 'text-text-muted'}`}
+            >
+              Daftar
+            </button>
+            <button
+              type="button"
+              aria-pressed={view === 'calendar'}
+              onClick={() => setView('calendar')}
+              className={`rounded-[6px] px-3 py-1 text-sm ${view === 'calendar' ? 'bg-surface-raised text-text-main' : 'text-text-muted'}`}
+            >
+              Kalender
+            </button>
+          </div>
+          {canCreate ? (
+            <Button variant="primary" onClick={() => setCreateOpen(true)}>
+              <IconPlus /> Rapat baru
+            </Button>
+          ) : (
+            <PermissionDenied message="Pembuatan rapat hanya untuk pemilik, admin, atau ketua divisi." />
+          )}
+        </div>
       </header>
 
       {meetings.length === 0 ? (
         <EmptyState title="Belum ada rapat" description="Jadwalkan rapat pertama untuk mulai mencatat keputusan." />
+      ) : view === 'calendar' ? (
+        <MeetingCalendar
+          meetings={meetings}
+          onSelect={setSelectedMeetingId}
+          monthCursor={monthCursor}
+          setMonthCursor={setMonthCursor}
+        />
       ) : (
         <>
           <section aria-label="Rapat mendatang / berlangsung">

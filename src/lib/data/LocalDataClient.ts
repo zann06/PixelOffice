@@ -1,6 +1,10 @@
 import type {
   Decision,
+  Department,
+  Workspace,
+  DepartmentCreateInput,
   TaskComment,
+  WorkspaceCreateInput,
   Meeting,
   Program,
   ProgramCreateInput,
@@ -12,7 +16,6 @@ import type {
   MemberAddInput,
   MemberUpdateInput,
   WorkspaceMember,
-  Workspace,
   WorkspaceSnapshot,
   ActivityEvent,
 } from '../../types/data'
@@ -58,8 +61,9 @@ function loadDb(): StoredDatabase {
     try {
       const parsed = JSON.parse(raw) as StoredDatabase
       if (parsed && parsed.workspaces && parsed.tasks) {
-        // Forward-migrate databases stored before comments existed.
+        // Forward-migrate databases stored before comments/recurrence existed.
         if (!Array.isArray(parsed.comments)) parsed.comments = []
+        for (const task of parsed.tasks) task.recurrence ??= null
         return parsed
       }
     } catch {
@@ -310,6 +314,7 @@ export class LocalDataClient implements DataClient {
       description: validateOptionalText(input.description, LIMITS.descriptionMax, 'description', 'Deskripsi'),
       status: 'todo',
       priority: input.priority,
+      recurrence: input.recurrence ?? null,
       assigneeUserId: input.assigneeUserId,
       createdBy: userId,
       dueAt: validateDateString(input.dueAt, 'dueAt', 'Tenggat'),
@@ -360,6 +365,34 @@ export class LocalDataClient implements DataClient {
       task.status = patch.status
       task.completedAt = patch.status === 'done' ? now : null
       changes.push(`status: ${patch.status}`)
+      // Recurring task completed: spawn the next occurrence as fresh `todo`
+      // (PRD P1). Only on the todo -> done transition, never repeatedly.
+      if (patch.status === 'done' && previousStatus !== 'done' && task.recurrence) {
+        const base = task.dueAt ? new Date(task.dueAt) : new Date(now)
+        const next = new Date(base)
+        if (task.recurrence === 'weekly') next.setDate(next.getDate() + 7)
+        else next.setMonth(next.getMonth() + 1)
+        const spawned: Task = {
+          ...task,
+          id: uuid(),
+          status: 'todo',
+          completedAt: null,
+          blockedReason: null,
+          dueAt: next.toISOString(),
+          createdAt: now,
+          updatedAt: now,
+        }
+        this.db.tasks.push(spawned)
+        this.logActivity({
+          workspaceId: task.workspaceId,
+          actorUserId: userId,
+          entityType: 'task',
+          entityId: spawned.id,
+          action: 'task.recurring_spawned',
+          metadata: { taskTitle: spawned.title, recurrence: task.recurrence },
+        })
+        changes.push(`tugas berulang berikutnya dibuat`)
+      }
     }
     if (patch.blockedReason !== undefined) {
       task.blockedReason = validateOptionalText(patch.blockedReason, LIMITS.descriptionMax, 'blockedReason', 'Alasan terhambat')
@@ -698,6 +731,59 @@ export class LocalDataClient implements DataClient {
       metadata: { taskTitle: task.title },
     })
     saveDb(this.db)
+  }
+
+  // ---- workspaces & departments -------------------------------------------
+
+  async createWorkspace(input: WorkspaceCreateInput): Promise<Workspace> {
+    const userId = this.requireSession()
+    const name = validateOptionalText(input.name, LIMITS.nameMax, 'name', 'Nama workspace') ?? ''
+    if (name.length < 3) throw new ValidationError('Nama workspace minimal 3 karakter.', 'name')
+    const slugBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'workspace'
+    let slug = slugBase
+    let n = 2
+    while (this.db.workspaces.some((w) => w.slug === slug)) slug = `${slugBase}-${n++}`
+    const now = new Date().toISOString()
+    const workspace: Workspace = {
+      id: uuid(),
+      name,
+      slug,
+      timezone: input.timezone || 'Asia/Jakarta',
+      visibility: 'private',
+      createdAt: now,
+    }
+    this.db.workspaces.push(workspace)
+    this.db.profiles.push({ id: userId, displayName: this.db.profiles.find((p) => p.id === userId)?.displayName ?? 'Saya' })
+    this.db.memberships.push({ workspaceId: workspace.id, userId, role: 'owner', joinedAt: now })
+    saveDb(this.db)
+    return workspace
+  }
+
+  async createDepartment(input: DepartmentCreateInput): Promise<Department> {
+    const actorId = this.requireMemberManager(input.workspaceId)
+    const name = validateOptionalText(input.name, LIMITS.nameMax, 'name', 'Nama departemen') ?? ''
+    if (name.length < 2) throw new ValidationError('Nama departemen minimal 2 karakter.', 'name')
+    const dup = this.db.departments.some((d) => d.workspaceId === input.workspaceId && d.name.toLowerCase() === name.toLowerCase())
+    if (dup) throw new ValidationError('Sudah ada departemen dengan nama itu.', 'name')
+    const department: Department = {
+      id: uuid(),
+      workspaceId: input.workspaceId,
+      name,
+      description: validateOptionalText(input.description, LIMITS.summaryMax, 'description', 'Deskripsi'),
+      leadUserId: null,
+      createdAt: new Date().toISOString(),
+    }
+    this.db.departments.push(department)
+    this.logActivity({
+      workspaceId: input.workspaceId,
+      actorUserId: actorId,
+      entityType: 'department',
+      entityId: department.id,
+      action: 'department.created',
+      metadata: { departmentName: department.name },
+    })
+    saveDb(this.db)
+    return department
   }
 
   // ---- demo maintenance ----------------------------------------------------

@@ -80,6 +80,8 @@ export interface Program {
   updatedAt: string
 }
 
+export type Recurrence = 'weekly' | 'monthly'
+
 export interface Task {
   id: string
   workspaceId: string
@@ -93,11 +95,25 @@ export interface Task {
   createdBy: string
   dueAt: string | null
   blockedReason: string | null
+  /** Recurring tasks respawn as a fresh `todo` task when marked done. */
+  recurrence: Recurrence | null
   /** Set when the task was created from a meeting decision (docs/USER_FLOWS.md Flow E). */
   decisionId: string | null
   createdAt: string
   updatedAt: string
   completedAt: string | null
+}
+
+export interface WorkspaceCreateInput {
+  name: string
+  purpose: string | null
+  timezone: string
+}
+
+export interface DepartmentCreateInput {
+  workspaceId: string
+  name: string
+  description: string | null
 }
 
 export interface Meeting {
@@ -142,7 +158,7 @@ export interface Decision {
   createdAt: string
 }
 
-export type ActivityEntityType = 'task' | 'program' | 'meeting' | 'decision' | 'member'
+export type ActivityEntityType = 'task' | 'program' | 'meeting' | 'decision' | 'member' | 'department' | 'workspace'
 
 export interface ActivityEvent {
   id: string
@@ -185,6 +201,7 @@ export interface TaskCreateInput {
   priority: TaskPriority
   assigneeUserId: string | null
   dueAt: string | null
+  recurrence?: Recurrence | null
 }
 
 export interface TaskUpdateInput {

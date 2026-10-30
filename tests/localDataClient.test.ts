@@ -153,6 +153,69 @@ describe('meeting decision → task (Flow E)', () => {
   })
 })
 
+describe('workspaces, departments, recurrence', () => {
+  it('creates a private workspace with the creator as owner', async () => {
+    const client = await signedIn('u-andi')
+    const ws = await client.createWorkspace({ name: 'Divisi Riset Baru', purpose: 'Uji coba', timezone: 'Asia/Jakarta' })
+    expect(ws.visibility).toBe('private')
+    const snap = await client.fetchWorkspace(ws.id)
+    expect(snap.workspace.name).toBe('Divisi Riset Baru')
+    expect(snap.memberships).toHaveLength(1)
+    expect(snap.memberships[0]).toMatchObject({ userId: 'u-andi', role: 'owner' })
+  })
+
+  it('rejects invalid workspace names', async () => {
+    const client = await signedIn('u-andi')
+    await expect(client.createWorkspace({ name: 'ab', purpose: null, timezone: 'Asia/Jakarta' })).rejects.toThrow(ValidationError)
+  })
+
+  it('admin creates a department; duplicate names rejected; members forbidden', async () => {
+    const owner = await signedIn('u-ratna')
+    const dept = await owner.createDepartment({ workspaceId: WORKSPACE_A, name: 'PSDM', description: 'Pengembangan SDM' })
+    expect(dept.name).toBe('PSDM')
+    await expect(owner.createDepartment({ workspaceId: WORKSPACE_A, name: 'psdm', description: null })).rejects.toThrow(ValidationError)
+    await expect(
+      (async () => {
+        localStorage.clear()
+        const member = await signedIn('u-andi')
+        return member.createDepartment({ workspaceId: WORKSPACE_A, name: 'Ilegal', description: null })
+      })(),
+    ).rejects.toThrow(PermissionError)
+  })
+
+  it('completing a weekly recurring task spawns the next occurrence once', async () => {
+    const client = await signedIn('u-ratna')
+    const snapshot = await client.fetchWorkspace(WORKSPACE_A)
+    const weekly = snapshot.tasks.find((t) => t.recurrence === 'weekly' && t.status === 'todo')!
+    const dueBefore = new Date(weekly.dueAt!)
+
+    const done = await client.updateTask(weekly.id, { status: 'done' })
+    expect(done.status).toBe('done')
+
+    const after = await client.fetchWorkspace(WORKSPACE_A)
+    const spawned = after.tasks.filter((t) => t.title === weekly.title && t.status === 'todo')
+    expect(spawned).toHaveLength(1)
+    const expectedDue = new Date(dueBefore)
+    expectedDue.setDate(expectedDue.getDate() + 7)
+    expect(new Date(spawned[0]!.dueAt!).toDateString()).toBe(expectedDue.toDateString())
+
+    // completing the spawned one spawns again; the done original does not
+    await client.updateTask(spawned[0]!.id, { status: 'done' })
+    const final = await client.fetchWorkspace(WORKSPACE_A)
+    expect(final.tasks.filter((t) => t.title === weekly.title && t.status === 'todo')).toHaveLength(1)
+    expect(final.tasks.filter((t) => t.title === weekly.title && t.status === 'done')).toHaveLength(2)
+  })
+
+  it('non-recurring tasks do not spawn', async () => {
+    const client = await signedIn('u-ratna')
+    const snapshot = await client.fetchWorkspace(WORKSPACE_A)
+    const plain = snapshot.tasks.find((t) => !t.recurrence && t.status === 'todo')!
+    await client.updateTask(plain.id, { status: 'done' })
+    const after = await client.fetchWorkspace(WORKSPACE_A)
+    expect(after.tasks.filter((t) => t.title === plain.title)).toHaveLength(1)
+  })
+})
+
 describe('activity log', () => {
   it('records task changes without private content', async () => {
     const client = await signedIn('u-fajar')
