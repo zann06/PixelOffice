@@ -22,7 +22,7 @@ Siklus waktu mengikuti jam nyata — pagi, siang, sore, dan malam masing-masing 
 
 | Pagi | Siang | Sore | Malam |
 | --- | --- | --- | --- |
-| ![Pagi](assets/screenshots/scene-pagi.png) | ![Siang](assets/screenshots/dashboard.png) | ![Sore](assets/screenshots/scene-sore.png) | ![Malam](assets/screenshots/scene-malam.png) |
+| ![Pagi](assets/screenshots/scene-pagi.png) | ![Siang](assets/screenshots/scene-siang.png) | ![Sore](assets/screenshots/scene-sore.png) | ![Malam](assets/screenshots/scene-malam.png) |
 
 ## Demo alur kerja
 

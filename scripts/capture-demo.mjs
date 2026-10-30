@@ -78,7 +78,7 @@ try {
 
   // phase gallery (lighting preview; presence still follows the real clock).
   // Reload before each pick — PixelSelect reopens reliably on a fresh mount.
-  for (const [label, file] of [['Pratinjau: Pagi', 'scene-pagi.png'], ['Pratinjau: Sore', 'scene-sore.png'], ['Pratinjau: Malam', 'scene-malam.png']]) {
+  for (const [label, file] of [['Pratinjau: Pagi', 'scene-pagi.png'], ['Pratinjau: Siang', 'scene-siang.png'], ['Pratinjau: Sore', 'scene-sore.png'], ['Pratinjau: Malam', 'scene-malam.png']]) {
     await page.reload()
     await page.getByRole('img', { name: /Kantor pixel-art/ }).waitFor({ timeout: 8000 })
     await page.waitForTimeout(500)
