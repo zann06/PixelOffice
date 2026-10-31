@@ -28,7 +28,9 @@ jobs:
       - run: npm test
       # GitHub Pages menyajikan repo di subpath /PixelOffice/ — sesuaikan base
       # agar bundle JS/CSS dan favicon memakai path yang benar.
-      - run: npx vite build --base=/PixelOffice/
+      - run: npm run build
+        env:
+          PAGES_BASE: PixelOffice
       - uses: actions/configure-pages@v5
         with:
           enablement: true

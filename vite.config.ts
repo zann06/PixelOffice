@@ -2,7 +2,12 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig({
+// GitHub Pages menyajikan repo di subpath — set PAGES_BASE=PixelOffice saat
+// build deploy (lihat .github/workflows/deploy-pages.yml). Tanpa garis miring
+// agar aman dari path-conversion shell Windows.
+const pagesBase = process.env.PAGES_BASE?.replace(/^\/+|\/+$/g, '')
+export default defineConfig(() => ({
+  base: pagesBase ? `/${pagesBase}/` : '/',
   plugins: [react(), tailwindcss()],
   test: {
     environment: 'jsdom',
@@ -14,4 +19,4 @@ export default defineConfig({
     // default 5s is too tight when several jsdom environments run in parallel.
     testTimeout: 20_000,
   },
-})
+}))
