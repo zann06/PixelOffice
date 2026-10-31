@@ -194,7 +194,7 @@ try {
     const palette = quantize(rgba, 256)
     const index = applyPalette(rgba, palette)
     gif.writeFrame(index, png.width, png.height, { palette, delay: 850 })
-    if (path.basename(file) !== 'frame-0-signin.png') fs.rmSync(file) // keep frames out of the repo
+    fs.rmSync(file) // keep frame files out of the repo; the GIF is the deliverable
   }
   gif.finish()
   fs.writeFileSync(path.join(outDir, 'demo.gif'), gif.bytes())
