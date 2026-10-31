@@ -1,5 +1,8 @@
 # PixelOffice
 
+[![CI](https://github.com/zann06/PixelOffice/actions/workflows/ci.yml/badge.svg)](https://github.com/zann06/PixelOffice/actions/workflows/ci.yml)
+[![Deploy ke GitHub Pages](https://github.com/zann06/PixelOffice/actions/workflows/deploy-pages.yml/badge.svg)](https://github.com/zann06/PixelOffice/actions/workflows/deploy-pages.yml)
+
 **Ruang kerja pixel-art untuk tim nyata.** PixelOffice membantu organisasi kampus, komunitas, dan tim kecil mengelola program kerja, tugas, rapat, penanggung jawab, tenggat, dan progres — semua tersambung dengan **kantor pixel-art yang hidup**.
 
 > PixelOffice adalah alat produktivitas, bukan game. Karakter pixel hanyalah visualisasi dari data kerja yang tersimpan — mereka tidak menggantikan datanya.
@@ -39,6 +42,10 @@ Yang terjadi pada GIF di atas — dan semua perubahannya **tersimpan**, langsung
 7. Semua perubahan tercatat di **log aktivitas** dan memperbarui progres program kerja.
 
 ## Cara mencoba
+
+**Langsung online (tanpa install):** buka 🌐 [https://zann06.github.io/PixelOffice/](https://zann06.github.io/PixelOffice/)
+
+**Atau jalankan lokal:**
 
 ```bash
 npm install
