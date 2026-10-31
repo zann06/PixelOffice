@@ -58,7 +58,6 @@ import {
   drawReceptionDesk,
   drawRug,
   drawSafe,
-  drawScooter,
   drawSideChairBack,
   drawSign,
   drawStage,
@@ -355,9 +354,7 @@ export function renderStaticLayer(boardStickies: string[], pins: { blocked: numb
   // trees & bushes outside (kept off the north wall face)
   for (const [x, y] of [[0, 0], [31, 0], [0, 5], [31, 6], [0, 12], [31, 13]] as const) drawTree(ctx, x, y)
   for (const [x, y] of [[0, 9], [0, 15], [31, 3], [31, 10], [31, 16]] as const) drawBush(ctx, x, y)
-  // parked scooters + parking signs along the street
-  drawScooter(ctx, 5, 19)
-  drawScooter(ctx, 24, 19)
+  // parking signs along the street
   drawParkingSign(ctx, 6, 18)
   drawParkingSign(ctx, 23, 18)
 

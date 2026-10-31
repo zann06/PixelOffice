@@ -844,24 +844,6 @@ export function drawWallClock(ctx: CanvasRenderingContext2D, tileX: number, tile
   rect(ctx, px + 8, py + 8, 2, 1, '#26314b')
 }
 
-/** Skuter parkir di tepi jalan (top-down). */
-export function drawScooter(ctx: CanvasRenderingContext2D, tileX: number, tileY: number) {
-  const px = tileX * TILE
-  const py = tileY * TILE
-  rect(ctx, px + 3, py + 12, 10, 2, 'rgba(32,36,47,0.2)')
-  // wheels
-  rect(ctx, px + 5, py + 1, 6, 3, '#26314b')
-  rect(ctx, px + 5, py + 12, 6, 3, '#26314b')
-  // deck + seat
-  panel(ctx, px + 4, py + 4, 8, 8, '#c9454f')
-  rect(ctx, px + 5, py + 7, 6, 2, '#3a4358')
-  rect(ctx, px + 5, py + 5, 2, 1, '#e07a5f')
-  // handlebar
-  rect(ctx, px + 3, py + 2, 10, 1, '#3a4358')
-  rect(ctx, px + 3, py + 1, 1, 2, '#3a4358')
-  rect(ctx, px + 12, py + 1, 1, 2, '#3a4358')
-}
-
 /** Rambu parkir kecil di trotoar. */
 export function drawParkingSign(ctx: CanvasRenderingContext2D, tileX: number, tileY: number) {
   const px = tileX * TILE
