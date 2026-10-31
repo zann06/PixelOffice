@@ -103,4 +103,4 @@ Skrip & aset: screenshot dan GIF di README dibuat sendiri lewat `npm run assets`
 
 ## Lisensi
 
-MIT untuk kode aplikasi. Sebelum rilis publik, tambahkan berkas `LICENSE` dan periksa lisensi setiap font, sprite, suara, dan aset pihak ketiga yang dipakai.
+MIT — lihat berkas [`LICENSE`](LICENSE). Semua aset (sprite, ikon, screenshot, GIF) dibuat sendiri untuk proyek ini dan ikut lisensi yang sama.
