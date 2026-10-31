@@ -1,16 +1,16 @@
 # PixelOffice
 
-**A pixel-art workspace for real teams.** PixelOffice helps campus organizations, student clubs, committees, and small teams track work programs, tasks, meetings, ownership, deadlines, and progress through a shared workspace with an animated pixel-art office.
+**Ruang kerja pixel-art untuk tim nyata.** PixelOffice membantu organisasi kampus, komunitas, dan tim kecil mengelola program kerja, tugas, rapat, penanggung jawab, tenggat, dan progres — semua tersambung dengan **kantor pixel-art yang hidup**.
 
-> PixelOffice is a productivity and coordination tool, not a game. Pixel characters visualize real team activity and workflow states; they do not replace the underlying task data.
+> PixelOffice adalah alat produktivitas, bukan game. Karakter pixel hanyalah visualisasi dari data kerja yang tersimpan — mereka tidak menggantikan datanya.
 
 ## Tampilan
 
-| Dasbor + kantor pixel | Panel anggota dari karakter |
+| Dasbor + kantor pixel | Panel tugas anggota |
 | --- | --- |
 | ![Dasbor dengan kantor pixel](assets/screenshots/dashboard.png) | ![Panel anggota](assets/screenshots/member-panel.png) |
 
-| Tugas | Detail tugas + diskusi |
+| Daftar tugas | Detail tugas + diskusi |
 | --- | --- |
 | ![Daftar tugas](assets/screenshots/tasks.png) | ![Detail tugas](assets/screenshots/task-detail.png) |
 
@@ -18,7 +18,7 @@
 | --- | --- |
 | ![Rapat dan keputusan](assets/screenshots/meeting-decision.png) | ![Anggota](assets/screenshots/members.png) |
 
-Siklus waktu mengikuti jam nyata — pagi, siang, sore, dan malam masing-masing punya pencahayaan sendiri (lihat juga pratinjau fase di toolbar dasbor):
+Waktu di scene mengikuti **jam nyata** — pagi, siang, sore, dan malam masing-masing punya pencahayaan sendiri:
 
 | Pagi | Siang | Sore | Malam |
 | --- | --- | --- | --- |
@@ -28,78 +28,72 @@ Siklus waktu mengikuti jam nyata — pagi, siang, sore, dan malam masing-masing 
 
 ![Demo alur kerja PixelOffice](assets/screenshots/demo.gif)
 
-Alur yang terlihat pada GIF di atas (semua perubahan tersimpan dan langsung tercermin di dasbor maupun scene):
+Yang terjadi pada GIF di atas — dan semua perubahannya **tersimpan**, langsung tercermin di dasbor maupun scene:
 
-1. **Masuk** memilih profil demo (Ratna — pemilik workspace).
-2. **Dasbor** menampilkan metrik dari data tersimpan dan kantor pixel: karakter duduk di meja divisinya, peserta rapat yang sedang berlangsung terlihat di Ruang Meeting.
-3. **Klik karakter** (atau anggota di daftar) membuka panel tugasnya — status bisa diubah langsung.
-4. **Tugas**: filter status/penanggung jawab, ubah status (terlambat tampil lebih dulu), buat tugas baru.
-5. **Rapat**: buka rapat, catat **keputusan**, lalu **"Jadikan tugas"** — keputusan menjadi tugas tertaut tanpa duplikasi.
-6. **Anggota** (pemilik/admin): tambah anggota, atur divisi & kursinya di scene.
-7. Setiap perubahan tercatat di **activity log**, memperbarui progres program, dan menggerakkan scene.
+1. **Masuk** dengan memilih profil demo (Ratna — pemilik workspace).
+2. **Dasbor** menampilkan metrik dari data tersimpan. Di kantor pixel, tiap anggota duduk di ruang divisinya, dan peserta rapat yang sedang berlangsung terlihat berkumpul di Ruang Meeting.
+3. **Klik karakter** di scene — panel tugasnya terbuka, status bisa diubah langsung dari situ.
+4. **Tugas**: ganti antara tampilan Daftar dan **Papan Kanban** (geser kartu antar kolom status), filter berdasarkan status/penanggung jawab, buat tugas baru.
+5. **Rapat**: buka rapat, catat **keputusan**, lalu klik **"Jadikan tugas"** — keputusan langsung menjadi tugas tertaut tanpa duplikasi.
+6. **Anggota** (pemilik/admin): tambah anggota baru, tentukan divisi dan kursinya di scene.
+7. Semua perubahan tercatat di **log aktivitas** dan memperbarui progres program kerja.
 
-Scene juga bisa dinavigasi: papan Project Board membuka halaman Program Kerja, layar TV koridor menampilkan jadwal rapat nyata dan membuka halaman Rapat, dan papan pengumuman menunjukkan pin aktivitas (merah = tugas terhambat).
-
-## Product principles
-
-1. **Data first, pixel art second.** All status indicators and character activity must reflect actual saved data.
-2. **One source of truth.** Work programs, tasks, meetings, decisions, and progress are linked.
-3. **Clear ownership.** Every task has an accountable owner or an explicit unassigned state.
-4. **Safe by default.** Workspaces are private by default; access is enforced on the server/database, not only in the UI.
-5. **Accessible and responsive.** Pixel art enhances the experience but never blocks keyboard, screen-reader, reduced-motion, or mobile users.
-6. **Open source, deployable by others.** No secret keys, private demo data, or proprietary assets are committed.
-
-## Core workflow
-
-`Create workspace → Invite members → Create department → Add work program → Break it into tasks → Assign owners and deadlines → Update progress → Review in meetings → Record decisions and follow-ups → Complete and report`
-
-## Planned stack
-
-- React + TypeScript + Vite
-- Tailwind CSS for layout and tokens
-- A small pixel-art renderer using CSS sprites or a tile/sprite canvas where appropriate
-- Supabase Auth + Postgres + Row Level Security (RLS) for authentication and multi-tenant data
-- Vitest + React Testing Library; Playwright for critical end-to-end flows
-- Vercel or another static hosting provider for the frontend; Supabase for backend services
-
-Pin exact versions in `package.json` and lockfiles during implementation. Avoid adding a 3D engine; this is a 2D pixel-art workspace.
-
-## Rencana pengembangan berikutnya
-
-1. Install Node.js LTS (tested on Node 25).
-2. Install dependencies with npm.
-3. Run the development server.
+## Cara mencoba
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
-npm test           # Vitest + RTL (78 tests, 16 files)
-npm run lint       # ESLint
-npm run typecheck  # strict TypeScript
-npm run build      # production build
-npm run e2e        # Playwright (npx playwright install chromium first)
-npm run assets     # regenerate docs/screenshots/*.png + demo.gif
+npm run dev        # buka http://localhost:5173
 ```
 
-Pick a demo profile on the sign-in screen (e.g. Ratna — owner, Fajar — lead, Andi — member, Hana — second workspace for isolation testing). Demo data is fictional and stored in your browser's localStorage; reset, export, or import it from Settings.
+Butuh Node.js versi LTS. Tanpa akun, tanpa server — **mode demo**: data fiktif tersimpan di browser Anda (localStorage).
 
-## Project status
+### Pilih akun demo
 
-This repository contains a **working demo implementation** of the specification, verified by **78 automated tests (Vitest + React Testing Library, 16 files)** and **4 Playwright end-to-end tests**. Batas antara yang nyata dan yang belum (backend, presence, dsb.) didokumentasikan terbuka di `docs/IMPLEMENTATION_NOTES.md` dan `ENHANCEMENT_SUMMARY.md`.
+| Profil | Peran | Cocok untuk mencoba |
+| --- | --- | --- |
+| Ratna Wijaya | Pemilik | Semua fitur: kelola anggota, buat departemen, ubah program |
+| Fajar Nugroho | Ketua Divisi Teknologi | Kelola tugas divisi, rapat, keputusan |
+| Andi Saputra | Anggota | Papan kanban, ubah status tugas sendiri (tanpa akses kelola) |
+| Anton Prakoso | Pengamat | Tampilan hanya-baca (tidak bisa mengubah apa pun) |
+| Hana Permata | Pemilik workspace kedua | Uji isolasi data antar workspace |
 
-Implemented and tested:
-- Responsive app shell (Indonesian UI) with dashboard, work programs, tasks, meetings, members, and settings.
-- Pixel-art office scene rendered procedurally from **original** assets at 3× internal scale: characters sit at their division's room (BPH → Ruang Ketua, Keuangan, Humas & Media, Acara → Aula), walk between rooms through doorways when their seat changes, and show typing/working states derived from saved tasks.
-- Real-clock day cycle (pagi/siang/sore/malam lighting) and office-hours presence: outside Sen–Jum 08.00–18.00 the office is honestly empty with an explanatory note.
-- Work programs with documented progress calculation, tasks with statuses/assignees/due dates/comments, meetings with agenda/notes/decisions, decision → follow-up task conversion, CSV export.
-- Member management (owner/admin): add members, assign division and scene seat, change roles — enforced in the data layer, no self-elevation.
-- Task board (kanban with drag-and-drop), meeting calendar view, workspace creation wizard, department management, in-app notification center, and recurring tasks (weekly/monthly auto-respawn on completion).
-- Corridor display with the real meeting schedule, clickable scene hotspots, activity feed, command palette (Ctrl/⌘K), due-soon reminders, trend chart, CSV/JSON export, keyboard + screen-reader alternatives for the scene, and reduced-motion support.
+### Yang bisa Anda coba
 
-Not implemented yet (honestly out of scope for this pass):
-- Real Supabase Auth + Postgres + RLS backend — the demo adapter enforces the same rules locally but is **not** a security boundary. The swap point is `src/lib/data/index.ts`.
-- Email invitations, notifications, realtime, and file attachments.
+- **Klik karakter** di kantor pixel — panel tugas anggota itu terbuka. Arahkan kursor ke ruangan untuk info; klik papan Project Board / TV koridor / papan pengumuman untuk lompat ke halaman terkait.
+- **Amati jam kerja**: kantor ramai Senin–Jumat 08.00–18.00. Di luar jam itu scene jujur menampilkan kantor kosong lengkap dengan catatannya — dan tiap pagi pukul 08.00 anggota berjalan masuk lewat pintu ke meja masing-masing.
+- **Ubah status tugas** lewat dropdown di baris tugas, atau **geser kartu** di papan kanban.
+- **Buka rapat → catat keputusan → jadikan tugas** — tindak lanjut rapat tidak hilang.
+- **Lonceng notifikasi** di sidebar: tugas terlambat, tenggat hari ini/besok, dan rapat mendatang.
+- **Ctrl+K** untuk mencari cepat tugas, program, rapat, atau anggota.
+- **Pengaturan**: ekspor CSV/JSON, impor data demo, reset data, dan pintasan keyboard.
 
-## License
+### Catatan penting
 
-MIT is a reasonable default for the application code. Before release, add a `LICENSE` file and separately verify the licenses of every font, sprite, sound, and third-party asset. Semua aset scene dibuat prosedural, dan screenshot/GIF README dibuat sendiri via `npm run assets`.
+- Data demo memakai **nama fiktif** dan tersimpan lokal di browser — aman, tidak ada server maupun data asli. Reset kapan pun dari Pengaturan.
+- Scene **mengikuti data, bukan karangan**: karakter hanya terlihat bekerja jika benar-benar punya tugas berjalan, dan kantor kosong di luar jam kerja — jangan kaget jika membuka di malam hari.
+- Tampilan **hanya mode terang** (sengaja, mengikuti gaya visual referensi).
+
+## Rencana pengembangan berikutnya
+
+**Bisa ditambahkan tanpa backend (demo lokal tetap utuh):** sebagian besar sudah masuk — papan kanban, kalender rapat, buat workspace + kelola departemen, pusat notifikasi, tugas berulang, statistik per divisi. Usulan berikutnya tetap menyambut kontribusi.
+
+**Butuh Supabase asli (backend) — milestone berikutnya:**
+
+- [ ] Autentikasi asli (email/magic link) + Postgres + Row Level Security.
+- [ ] Undangan anggota via tautan aman yang kedaluwarsa.
+- [ ] Realtime: perubahan tugas terlihat langsung antar anggota.
+- [ ] Lampiran berkas pada tugas/rapat (private bucket).
+
+## Teknologi
+
+React + TypeScript + Vite · Tailwind CSS · Canvas renderer buatan sendiri (tanpa aset game pihak ketiga) · Vitest + React Testing Library · Playwright. Backend produksi direncanakan memakai Supabase (Auth + Postgres + RLS); titik penukarnya sudah disiapkan di `src/lib/data/index.ts`.
+
+## Status proyek
+
+Implementasi demo yang **berfungsi penuh**, terverifikasi **78 tes otomatis (16 file)** + **4 uji end-to-end Playwright**. Semua aturan izin divalidasi ulang di lapisan data pada setiap perubahan — tapi ingat, adapter lokal ini bukan pengganti keamanan server.
+
+Skrip & aset: screenshot dan GIF di README dibuat sendiri lewat `npm run assets` (Playwright + gifenc) — tanpa konten pihak ketiga.
+
+## Lisensi
+
+MIT untuk kode aplikasi. Sebelum rilis publik, tambahkan berkas `LICENSE` dan periksa lisensi setiap font, sprite, suara, dan aset pihak ketiga yang dipakai.
