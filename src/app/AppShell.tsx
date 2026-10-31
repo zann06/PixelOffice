@@ -102,7 +102,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <div className="flex flex-1">
         {/* Desktop sidebar */}
-        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-6 border-r border-border-main bg-gradient-to-b from-surface to-[#fbfaf6] px-4 py-5 lg:flex">
+        <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col gap-3 overflow-y-auto overflow-x-hidden border-r border-border-main bg-gradient-to-b from-surface to-[#fbfaf6] px-4 py-4 lg:flex lg:[scrollbar-width:thin]">
           <Link to="dashboard" className="flex items-center gap-2.5 px-1">
             <LogoMark />
             <span className="flex flex-col leading-none">
@@ -152,8 +152,10 @@ export function AppShell({ children }: { children: ReactNode }) {
           <NavLinks />
 
           <div className="mt-auto flex flex-col gap-3">
-            <PixelClock />
-            <div className="rounded-[10px] border border-border-main bg-surface-raised/70 px-3 py-2">
+            <div className="[@media(max-height:860px)]:hidden">
+              <PixelClock />
+            </div>
+            <div className="rounded-[10px] border border-border-main bg-surface-raised/70 px-3 py-2 [@media(max-height:740px)]:hidden">
               <p className="pixel-label text-[9px] text-text-muted">Mode demo</p>
               <p className="mt-0.5 text-[11px] leading-snug text-text-muted">Data tersimpan lokal di browser ini. Bukan backend produksi.</p>
             </div>
@@ -217,6 +219,36 @@ export function AppShell({ children }: { children: ReactNode }) {
 
           {menuOpen && (
             <div className="border-b border-border-main bg-surface px-4 py-4 lg:hidden">
+              <div className="mb-3">
+                <label htmlFor="workspace-switcher-mobile" className="pixel-label mb-1 block text-[10px] text-text-muted">
+                  Workspace
+                </label>
+                <PixelSelect
+                  id="workspace-switcher-mobile"
+                  className="w-full rounded-[9px] border border-border-main bg-surface-raised px-2.5 py-2 text-sm"
+                  value={snapshot?.workspace.id ?? ''}
+                  onChange={(e) => void switchWorkspace(e.target.value)}
+                >
+                  {workspaces.map((w) => (
+                    <option key={w.id} value={w.id}>
+                      {w.name}
+                    </option>
+                  ))}
+                </PixelSelect>
+              </div>
+              <div className="mb-3 flex flex-col gap-2">
+                <NotificationBell />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false)
+                    setWsOpen(true)
+                  }}
+                  className="flex items-center gap-2 rounded-[9px] border border-dashed border-border-main px-3 py-2 text-sm text-text-muted"
+                >
+                  <IconPlus aria-hidden /> Workspace baru
+                </button>
+              </div>
               <NavLinks onNavigate={() => setMenuOpen(false)} />
               <button
                 type="button"
