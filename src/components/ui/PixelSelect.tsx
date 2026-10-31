@@ -4,6 +4,7 @@ import {
   isValidElement,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -13,6 +14,7 @@ import {
   type ReactNode,
   type SelectHTMLAttributes,
 } from 'react'
+import { createPortal } from 'react-dom'
 
 interface Opt {
   value: string
@@ -55,6 +57,11 @@ function collect(children: ReactNode, out: Opt[] = []): Opt[] {
  * popup cannot be styled, so this renders its own listbox with full keyboard
  * support: ↑/↓/Home/End to move, Enter/Space to pick, Esc to close, and
  * type-ahead by first letter.
+ *
+ * The open listbox renders through a PORTAL with fixed positioning anchored
+ * to the trigger, so it is never clipped by scrollable/overflow-hidden
+ * containers (sidebar, dialogs, table cells). It flips upward when there is
+ * no room below and is clamped to the viewport.
  */
 export function PixelSelect({
   children,
@@ -76,7 +83,7 @@ export function PixelSelect({
   const [inner, setInner] = useState(String(defaultValue ?? options[0]?.value ?? ''))
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
-  const [up, setUp] = useState(false)
+  const [pos, setPos] = useState<{ top: number; left: number; minWidth: number } | null>(null)
 
   const current = value !== undefined ? String(value) : inner
   const selected = options.find((o) => o.value === current) ?? options[0]
@@ -85,7 +92,8 @@ export function PixelSelect({
   useEffect(() => {
     if (!open) return
     const onDown = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (!wrapRef.current?.contains(t) && !listRef.current?.contains(t)) setOpen(false)
     }
     document.addEventListener('mousedown', onDown)
     return () => document.removeEventListener('mousedown', onDown)
@@ -95,10 +103,34 @@ export function PixelSelect({
     if (open) listRef.current?.children[active]?.scrollIntoView?.({ block: 'nearest' })
   }, [open, active])
 
+  // Anchor the portal listbox to the trigger; flip up and clamp to viewport.
+  useLayoutEffect(() => {
+    if (!open) return
+    function place() {
+      const rect = wrapRef.current?.getBoundingClientRect()
+      const panel = listRef.current
+      if (!rect || !panel) return
+      const vw = window.innerWidth
+      const vh = window.innerHeight
+      const w = panel.offsetWidth
+      const h = panel.offsetHeight
+      let top = rect.bottom + 4
+      if (top + h > vh - 8 && rect.top - h - 4 > 8) top = rect.top - h - 4
+      top = Math.max(8, Math.min(top, vh - h - 8))
+      const left = Math.max(8, Math.min(rect.left, vw - w - 8))
+      setPos({ top, left, minWidth: rect.width })
+    }
+    place()
+    window.addEventListener('resize', place)
+    window.addEventListener('scroll', place, true)
+    return () => {
+      window.removeEventListener('resize', place)
+      window.removeEventListener('scroll', place, true)
+    }
+  }, [open, options])
+
   function openList() {
     if (disabled) return
-    const rect = wrapRef.current?.getBoundingClientRect()
-    setUp(rect ? window.innerHeight - rect.bottom < 260 && rect.top > 260 : false)
     setActive(selectedIndex)
     setOpen(true)
   }
@@ -180,33 +212,36 @@ export function PixelSelect({
         </svg>
       </button>
       {name && <input type="hidden" name={name} value={current} required={required} />}
-      {open && (
-        <ul
-          ref={listRef}
-          id={listId}
-          role="listbox"
-          className={`pixel-select-list scroll-slim absolute left-0 z-50 max-h-60 w-max min-w-full max-w-[85vw] overflow-auto ${up ? 'bottom-full mb-1' : 'top-full mt-1'}`}
-        >
-          {options.map((o, i) => (
-            <li
-              key={`${o.value}-${i}`}
-              id={`${listId}-${i}`}
-              role="option"
-              aria-selected={o.value === selected?.value}
-              aria-disabled={o.disabled || undefined}
-              onMouseEnter={() => !o.disabled && setActive(i)}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => pick(i)}
-              className={`pixel-select-item ${i === active ? 'is-active' : ''} ${o.value === selected?.value ? 'is-selected' : ''} ${o.disabled ? 'is-disabled' : ''}`}
-            >
-              <span className="pixel-select-mark" aria-hidden>
-                {o.value === selected?.value ? '▶' : ''}
-              </span>
-              <span className="truncate">{o.label}</span>
-            </li>
-          ))}
-        </ul>
-      )}
+      {open &&
+        createPortal(
+          <ul
+            ref={listRef}
+            id={listId}
+            role="listbox"
+            className="pixel-select-list scroll-slim fixed z-[60] max-h-60 overflow-auto"
+            style={{ top: pos?.top ?? -9999, left: pos?.left ?? -9999, minWidth: pos?.minWidth ?? undefined, width: 'max-content', maxWidth: Math.min(420, (typeof window !== 'undefined' ? window.innerWidth : 640) - 16) }}
+          >
+            {options.map((o, i) => (
+              <li
+                key={`${o.value}-${i}`}
+                id={`${listId}-${i}`}
+                role="option"
+                aria-selected={o.value === selected?.value}
+                aria-disabled={o.disabled || undefined}
+                onMouseEnter={() => !o.disabled && setActive(i)}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pick(i)}
+                className={`pixel-select-item ${i === active ? 'is-active' : ''} ${o.value === selected?.value ? 'is-selected' : ''} ${o.disabled ? 'is-disabled' : ''}`}
+              >
+                <span className="pixel-select-mark" aria-hidden>
+                  {o.value === selected?.value ? '▶' : ''}
+                </span>
+                <span className="truncate">{o.label}</span>
+              </li>
+            ))}
+          </ul>,
+          document.body,
+        )}
     </div>
   )
 }

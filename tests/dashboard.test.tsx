@@ -68,7 +68,8 @@ describe('DashboardPage — metrics and pixel office from saved data', () => {
 
     const statusSelect = within(dialog).getByRole('combobox', { name: /ubah status tugas implementasi halaman utama/i })
     await user.click(statusSelect)
-    await user.click(await within(dialog).findByRole('option', { name: 'Selesai' }))
+    // opsi listbox dirender via portal di document.body — cari di level screen
+    await user.click(await screen.findByRole('option', { name: 'Selesai' }))
     await waitFor(() => {
       expect(screen.getAllByText('Status tugas tersimpan.').length).toBeGreaterThan(0)
     })
